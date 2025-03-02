@@ -1,0 +1,6 @@
+The controller class contains the controllers for the frontend
+
+Breakdown
+-- Player Controller -- Holds the Player api endpoints
+-- User Controller -- Holds the User api endpoints
+-- Trade Controller -- Holds the Trade api endpoints

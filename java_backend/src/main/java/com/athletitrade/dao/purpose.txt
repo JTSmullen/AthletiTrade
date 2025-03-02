@@ -1,0 +1,1 @@
+DAO or Data Access Objects is a directory made to hold the JDBC logic and code.
