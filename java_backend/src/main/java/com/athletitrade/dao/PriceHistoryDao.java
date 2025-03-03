@@ -1,10 +1,8 @@
 package com.athletitrade.dao;
 
-/*
-    TODO: Create Price History DAOs
-    Note: Use Database Config to create the connection to the database.
-          There should only be one connection. (This may change depending on latency)
- */
+import com.athletitrade.model.PriceHistory;
+import org.springframework.data.repository.CrudRepository;
 
-public class PriceHistoryDao {
+public interface PriceHistoryDao extends CrudRepository<PriceHistory, Integer> {
+    // add custom query methods here if needed later
 }

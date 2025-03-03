@@ -1,12 +1,12 @@
-CREATE TABLE users (
+CREATE TABLE USERS (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL, -- Store hashed passwords!
+    password VARCHAR(255) NOT NULL, -- Store hashed passwords
     email VARCHAR(100) UNIQUE,
     balance DECIMAL(10, 2) NOT NULL DEFAULT 10000.00 -- Starting funds
 );
 
-CREATE TABLE players (
+CREATE TABLE PLAYERS (
     player_id INT PRIMARY KEY, -- NBA Player ID
     player_name VARCHAR(100) NOT NULL,
     team_id INT, -- NBA Team ID
@@ -14,7 +14,7 @@ CREATE TABLE players (
     current_price DECIMAL(10, 2) NOT NULL DEFAULT 10.00 -- Initial price / This will very for each player
 );
 
-CREATE TABLE trades (
+CREATE TABLE TRADES (
     trade_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     player_id INT NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE trades (
     FOREIGN KEY (player_id) REFERENCES players(player_id)
 );
 
-CREATE TABLE player_price_history (
+CREATE TABLE PLAYER_PRICE_HISTORY (
     price_history_id INT AUTO_INCREMENT PRIMARY KEY,
     player_id INT NOT NULL,
     price DECIMAL(10, 2) NOT NULL,

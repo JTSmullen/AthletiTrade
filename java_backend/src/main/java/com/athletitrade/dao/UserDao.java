@@ -1,10 +1,9 @@
 package com.athletitrade.dao;
 
-/*
-    TODO: Create User DAOs
-    Note: Use Database Config to create the connection to the database.
-          There should only be one connection. (This may change depending on latency)
- */
+import com.athletitrade.model.User;
+import org.springframework.data.repository.CrudRepository;
 
-public class UserDao {
+public interface UserDao extends CrudRepository<User, Integer> {
+    User findByUsername(String username);
+    User findByEmail(String email);
 }

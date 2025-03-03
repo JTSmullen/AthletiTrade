@@ -1,10 +1,8 @@
 package com.athletitrade.dao;
 
-/*
-    TODO: Create Trade DAOs
-    Note: Use Database Config to create the connection to the database.
-          There should only be one connection. (This may change depending on latency)
- */
+import com.athletitrade.model.Trade;
+import org.springframework.data.repository.CrudRepository;
 
-public class TradeDao {
+public interface TradeDao extends CrudRepository<Trade, Integer> {
+    // add custom query methods here if needed later
 }

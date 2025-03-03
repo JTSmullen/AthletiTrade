@@ -1,10 +1,8 @@
 package com.athletitrade.dao;
 
-/*
-    TODO: Create Player DAOs
-    Note: Use Database Config to create the connection to the database.
-          There should only be one connection. (This may change depending on latency)
- */
+import com.athletitrade.model.Player;
+import org.springframework.data.repository.CrudRepository;
 
-public class PlayerDao {
+public interface PlayerDao extends CrudRepository<Player, Integer> {
+    // add custom query methods here if needed later
 }

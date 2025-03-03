@@ -1,7 +1,86 @@
 package com.athletitrade.model;
 
-/*
-    TODO: Create Trade POJOs
- */
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.sql.Timestamp;
+
+@Table("TRADES") // Map to the "trades" table
 public class Trade {
+    @Id
+    private Integer tradeId;
+    private Integer userId;
+    private Integer playerId;
+    private String tradeType; // 'BUY' or 'SELL'
+    private Integer quantity;
+    private Double price;
+    private Timestamp tradeTimestamp;
+
+    // Constructors, Getters, Setters
+    public Trade() {
+    }
+
+    public Trade(Integer userId, Integer playerId, String tradeType, Integer quantity, Double price) {
+        this.userId = userId;
+        this.playerId = playerId;
+        this.tradeType = tradeType;
+        this.quantity = quantity;
+        this.price = price;
+    }
+
+    public Integer getTradeId() {
+        return tradeId;
+    }
+
+    public void setTradeId(Integer tradeId) {
+        this.tradeId = tradeId;
+    }
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
+    public Integer getPlayerId() {
+        return playerId;
+    }
+
+    public void setPlayerId(Integer playerId) {
+        this.playerId = playerId;
+    }
+
+    public String getTradeType() {
+        return tradeType;
+    }
+
+    public void setTradeType(String tradeType) {
+        this.tradeType = tradeType;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public Timestamp getTradeTimestamp() {
+        return tradeTimestamp;
+    }
+
+    public void setTradeTimestamp(Timestamp tradeTimestamp) {
+        this.tradeTimestamp = tradeTimestamp;
+    }
 }
