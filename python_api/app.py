@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from nba_api.stats.endpoints import playercareerstats, commonplayerinfo, teamdashboardbygeneralsplits, playergamelog
 from nba_api.live.nba.endpoints import scoreboard
+from nba_api.stats.static import players
 import json
 
 app = Flask(__name__)
@@ -77,6 +78,19 @@ def get_player_game_log_route(player_id):
     if game_log:
         return jsonify(game_log)
     return jsonify({"error": "Player game log not found"}), 404
+
+@app.route('/players/list', methods=['GET'])
+def get_players_list():
+    active_players = []
+    all_players = players.get_players()
+    for player in all_players:
+        if player['is_active']:
+            active_players.append(player)
+    if active_players is not None:
+        return jsonify({'player': active_players})
+    else:
+        print("No active players found")
+        return jsonify({'error': "Active players not found"}), 404
 
 
 if __name__ == '__main__':

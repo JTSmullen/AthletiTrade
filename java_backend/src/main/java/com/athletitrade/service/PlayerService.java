@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,6 +32,36 @@ public class PlayerService {
     public Player getPlayerById(int playerId) {
         Optional<Player> playerOptional = playerDao.findById(playerId);
         return playerOptional.orElse(null);
+    }
+
+    public List<Player> fetchPlayers() {
+        String playersListUrl = PYTHON_API_BASE_URL + "/players/list";
+
+        try {
+            String playersJson = restTemplate.getForObject(playersListUrl, String.class);
+            JsonNode rootNode = objectMapper.readTree(playersJson);
+
+            JsonNode playersListNode = rootNode.get("player");
+
+            if (playersListNode != null && playersListNode.isArray()) {
+                List<Player> players = new ArrayList<>();
+                for (JsonNode playerNode : playersListNode) {
+                    Player player = new Player();
+                    player.setPlayerId(playerNode.get("id").asInt());
+                    player.setPlayerName(playerNode.get("full_name").asText());
+                    player.setTeamId(null);
+                    player.setPosition(null);
+                    player.setCurrentPrice(10.00);
+                    players.add(player);
+                }
+                return players;
+            }
+        } catch (IOException e) {
+            System.err.println("Error fetching or parsing player list from Python API: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("General error fetching player list: " + e.getMessage());
+        }
+        return null;
     }
 
     public Player fetchAndUpdatePlayerInfo(int playerId) {
@@ -54,17 +86,16 @@ public class PlayerService {
                 player.setPlayerName(playerName);
                 player.setTeamId(teamId);
                 player.setPosition(position);
-                player.setCurrentPrice(10.00); // Initial price - this will vary on player
+                player.setCurrentPrice(10.00);
 
-                return playerDao.save(player); // Save or update player info
+                return playerDao.save(player);
             }
         } catch (IOException e) {
             System.err.println("Error fetching or parsing player info from Python API: " + e.getMessage());
         } catch (Exception e) {
             System.err.println("General error fetching player info: " + e.getMessage());
         }
-        return null; // Return null if fetching or processing fails
+        return null;
     }
 
-    // Other methods to fetch player stats, update prices, etc.
 }

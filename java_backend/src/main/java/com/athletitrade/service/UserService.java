@@ -4,7 +4,6 @@ import com.athletitrade.dao.UserDao;
 import com.athletitrade.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.security.*;
 
 @Service
 public class UserService {

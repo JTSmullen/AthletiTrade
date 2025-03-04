@@ -32,15 +32,18 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(registeredUser);
     }
 
-    @PostMapping("/login")
+    @PostMapping("/login") // **New Login Endpoint**
     public ResponseEntity<User> login(@RequestBody Map<String, String> credentials) {
         String username = credentials.get("username");
         String password = credentials.get("password");
+        if (username == null || password == null) {
+            return ResponseEntity.badRequest().build(); // 400 Bad Request if missing username or password
+        }
         User user = userService.loginUser(username, password);
         if (user != null) {
-            return ResponseEntity.ok(user); // Or return a JWT token when deployed
+            return ResponseEntity.ok(user);       // 200 OK with User object if login successful
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized if login fails
         }
     }
 
