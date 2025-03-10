@@ -64,6 +64,23 @@ public class PlayerService {
         return null;
     }
 
+    public JsonNode fetchPlayerGameStats(int playerId) {
+        String gameLogUrl = PYTHON_API_BASE_URL + "/players/" + playerId + "/game_log";
+
+        try {
+            String gameLogJson = restTemplate.getForObject(gameLogUrl, String.class);
+            JsonNode gameLogNode = objectMapper.readTree(gameLogJson);
+
+            return gameLogNode;
+
+        } catch (IOException e) {
+            System.err.println("Error fetching game log for player ID " + playerId + " from Python API: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("General error fetching game log for player ID " + playerId + ": " + e.getMessage());
+        }
+        return null;
+    }
+
     public Player fetchAndUpdatePlayerInfo(int playerId) {
         String playerInfoUrl = PYTHON_API_BASE_URL + "/players/" + playerId + "/info";
 

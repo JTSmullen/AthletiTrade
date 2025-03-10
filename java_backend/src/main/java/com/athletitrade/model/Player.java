@@ -63,4 +63,5 @@ public class Player {
     public void setCurrentPrice(Double currentPrice) {
         this.currentPrice = currentPrice;
     }
+
 }

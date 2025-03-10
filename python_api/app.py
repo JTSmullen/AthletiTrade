@@ -23,7 +23,6 @@ def fetch_player_info(player_id):
         player_info_json = player_info.get_json()
         return json.loads(player_info_json)
     except Exception as e:
-        print(f"Error fetching info for player ID {player_id}: {e}")
         return None
 
 def fetch_live_games():
@@ -36,15 +35,45 @@ def fetch_live_games():
         print(f"Error fetching live games: {e}")
         return None
 
-def fetch_player_game_log(player_id, season="2023-24", season_type_all_star="Regular Season"):
-    """Fetches game log for a player in a specific season."""
+def fetch_player_game_log(player_id, season="2024"):
+    if not isinstance(player_id, int) or player_id <= 0:
+        return {"error": "Invalid player ID"}
+
     try:
-        game_log = playergamelog.PlayerGameLog(player_id_nullable=player_id, season_nullable=season, season_type_nullable=season_type_all_star)
+        game_log = playergamelog.PlayerGameLog(player_id=player_id, season=season)
+
+
+        if game_log is None:
+            return {"error": "Player game log not found"}
+
         game_log_json = game_log.get_json()
-        return json.loads(game_log_json)
+        game_log_data = json.loads(game_log_json)
+
+        if not game_log_data['resultSets'] or not game_log_data['resultSets'][0]['rowSet']:
+            return {"error": "Player game log not found"}
+
+        return game_log_data
+
     except Exception as e:
-        print(f"Error fetching game log for player ID {player_id}: {e}")
-        return None
+        return {"error": "Error fetching player game log"}
+
+
+@app.route('/players/<int:player_id>/game_log', methods=['GET'])
+def get_player_game_log_route(player_id):
+    """API endpoint to get player game log for the current season."""
+    game_log = fetch_player_game_log(player_id)
+    if "error" in game_log:
+        if game_log["error"] == "Invalid player ID":
+            return jsonify(game_log), 400
+        elif game_log["error"] == "Player game log not found":
+             return jsonify(game_log), 404
+        else:
+            return jsonify(game_log), 500
+    
+    if game_log:
+        return jsonify(game_log)
+    
+    return jsonify({"error": "Player game log not found"}), 404
 
 
 @app.route('/players/<int:player_id>/stats', methods=['GET'])
@@ -70,14 +99,6 @@ def get_live_games_route():
     if live_games:
         return jsonify(live_games)
     return jsonify({"error": "Live game data not found"}), 404
-
-@app.route('/players/<int:player_id>/game_log', methods=['GET'])
-def get_player_game_log_route(player_id):
-    """API endpoint to get player game log for the current season."""
-    game_log = fetch_player_game_log(player_id) # Defaults to current season "2023-24" and Regular Season
-    if game_log:
-        return jsonify(game_log)
-    return jsonify({"error": "Player game log not found"}), 404
 
 @app.route('/players/list', methods=['GET'])
 def get_players_list():
