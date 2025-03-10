@@ -4,27 +4,25 @@ import com.athletitrade.dao.UserDao;
 import com.athletitrade.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito; // Import Mockito
+import org.mockito.Mockito;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.*;
 
-// **Remove @SpringBootTest annotation ENTIRELY**
-//@SpringBootTest
+// Mock use of UserService class to ensure java logic works to isolate errors.
+
 public class UserServiceTest {
 
-    private UserService userService; // **No longer @Autowired - we will instantiate it directly**
+    private UserService userService;
 
-    private UserDao userDao; // **No longer @MockBean - we will create mock manually**
+    private UserDao userDao;
 
     private User testUser;
 
     @BeforeEach
     void setUp() {
-        // **Create a mock UserDao instance manually using Mockito.mock()**
         userDao = Mockito.mock(UserDao.class);
 
-        // **Manually instantiate UserService, injecting the mock UserDao**
         userService = new UserService(userDao);
 
         testUser = new User("testuser", "password123", "test@example.com", 10000.00);

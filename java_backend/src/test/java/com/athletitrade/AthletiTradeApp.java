@@ -1,4 +1,5 @@
 package com.athletitrade;
 
-public class AthletiTradeApp {
-}
+// For build, most likely will be deleted
+
+public class AthletiTradeApp {}

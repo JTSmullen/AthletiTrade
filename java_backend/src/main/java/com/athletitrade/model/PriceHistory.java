@@ -14,14 +14,16 @@ public class PriceHistory {
     private Timestamp timestamp;
 
     // Constructors, Getters, Setters
-    public PriceHistory() {
-    }
+    public PriceHistory() {} // init empty instance
 
     public PriceHistory(Integer playerId, Double price) {
         this.playerId = playerId;
         this.price = price;
-    }
+    } // init instance with info for database
 
+    /*
+        Getters and Setters
+     */
     public Integer getPriceHistoryId() {
         return priceHistoryId;
     }

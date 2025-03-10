@@ -11,14 +11,13 @@ public class Trade {
     private Integer tradeId;
     private Integer userId;
     private Integer playerId;
-    private String tradeType; // 'BUY' or 'SELL'
+    private String tradeType; // 'BUY' or 'SELL' | maybe switch to enum for consistency
     private Integer quantity;
     private Double price;
     private Timestamp tradeTimestamp;
 
-    // Constructors, Getters, Setters
-    public Trade() {
-    }
+
+    public Trade() {} // init empty instance
 
     public Trade(Integer userId, Integer playerId, String tradeType, Integer quantity, Double price) {
         this.userId = userId;
@@ -26,8 +25,11 @@ public class Trade {
         this.tradeType = tradeType;
         this.quantity = quantity;
         this.price = price;
-    }
+    } // init instance with info
 
+    /*
+        Getters and Setters
+     */
     public Integer getTradeId() {
         return tradeId;
     }

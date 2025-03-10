@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+// ENDPOINTS FOR THE FRONT END TO CALL. FINISH OTHER THINGS FIRST
+
 @RestController
 @RequestMapping("/api/trades")
 public class TradeController {

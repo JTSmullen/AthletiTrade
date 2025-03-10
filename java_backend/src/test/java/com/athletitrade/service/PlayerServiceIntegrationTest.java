@@ -21,8 +21,7 @@ public class PlayerServiceIntegrationTest {
     private PlayerDao playerDao;
     private ObjectMapper objectMapper;
 
-    private final String PYTHON_API_BASE_URL = "http://localhost:8000";
-
+    // Before each set up a mock DAO
     @BeforeEach
     void setUp() {
         restTemplate = new RestTemplate();
@@ -34,6 +33,7 @@ public class PlayerServiceIntegrationTest {
         playerService = new PlayerService(playerDao, restTemplate, objectMapper);
     }
 
+    // Get Players from API
     @Test
     void fetchPlayers_SuccessfulFetch_IntegrationTest_ManualWiring() {
         List<Player> players = playerService.fetchPlayers();
@@ -48,6 +48,7 @@ public class PlayerServiceIntegrationTest {
         }
     }
 
+    // Get game stats for a player ID (Assumes current season)
     @Test
     void fetchPlayerGameStats_SuccessfulFetch_IntegrationTest_ManualWiring() {
         int playerId = 201566;
@@ -62,6 +63,7 @@ public class PlayerServiceIntegrationTest {
         }
     }
 
+    // Incorrect playerID call
     @Test
     void fetchPlayerGameStats_ApiNotFound_IntegrationTest_ManualWiring() {
         int playerId = 999999;

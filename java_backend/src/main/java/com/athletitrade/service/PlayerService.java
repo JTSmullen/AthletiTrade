@@ -16,12 +16,13 @@ import java.util.Optional;
 @Service
 public class PlayerService {
 
-    private final PlayerDao playerDao;
+    private final PlayerDao playerDao; // Player Database connectivity
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    private static final String PYTHON_API_BASE_URL = "http://localhost:5000"; // Python API URL
+    private static final String PYTHON_API_BASE_URL = "http://localhost:5000"; // Python API URL | upon build will not be on localhost
 
+    // Autowired inits on build
     @Autowired
     public PlayerService(PlayerDao playerDao, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.playerDao = playerDao;
@@ -38,24 +39,25 @@ public class PlayerService {
         String playersListUrl = PYTHON_API_BASE_URL + "/players/list";
 
         try {
-            String playersJson = restTemplate.getForObject(playersListUrl, String.class);
-            JsonNode rootNode = objectMapper.readTree(playersJson);
+            String playersJson = restTemplate.getForObject(playersListUrl, String.class); // ping python_api and store response
+            JsonNode rootNode = objectMapper.readTree(playersJson); // change the string json response to json format
 
-            JsonNode playersListNode = rootNode.get("player");
+            JsonNode playersListNode = rootNode.get("player"); // Get 'player' root from json response
 
             if (playersListNode != null && playersListNode.isArray()) {
                 List<Player> players = new ArrayList<>();
                 for (JsonNode playerNode : playersListNode) {
-                    Player player = new Player();
+                    Player player = new Player(); // Init player
                     player.setPlayerId(playerNode.get("id").asInt());
                     player.setPlayerName(playerNode.get("full_name").asText());
-                    player.setTeamId(null);
-                    player.setPosition(null);
-                    player.setCurrentPrice(10.00);
-                    players.add(player);
+                    player.setTeamId(null); // Not in json response. Need to add in python_api. Set to null for build tests now
+                    player.setPosition(null); // Not in json response. Need to add in python_api. Set to null for build tests now
+                    player.setCurrentPrice(10.00); // This needs to become a method to calculate the starting price of player.
+                    players.add(player); // Add player instance to array list. THIS IS A LIST IN MEMORY instances are not named.
                 }
                 return players;
             }
+        // Exceptions
         } catch (IOException e) {
             System.err.println("Error fetching or parsing player list from Python API: " + e.getMessage());
         } catch (Exception e) {
@@ -65,14 +67,15 @@ public class PlayerService {
     }
 
     public JsonNode fetchPlayerGameStats(int playerId) {
-        String gameLogUrl = PYTHON_API_BASE_URL + "/players/" + playerId + "/game_log";
+        String gameLogUrl = PYTHON_API_BASE_URL + "/players/" + playerId + "/game_log"; // Endpoint URL
 
         try {
-            String gameLogJson = restTemplate.getForObject(gameLogUrl, String.class);
-            JsonNode gameLogNode = objectMapper.readTree(gameLogJson);
+            String gameLogJson = restTemplate.getForObject(gameLogUrl, String.class); // ping python_api and store response
+            JsonNode gameLogNode = objectMapper.readTree(gameLogJson); // change the string format to json format
 
-            return gameLogNode;
+            return gameLogNode; // return json format of game data
 
+        // Exceptions
         } catch (IOException e) {
             System.err.println("Error fetching game log for player ID " + playerId + " from Python API: " + e.getMessage());
         } catch (Exception e) {
@@ -81,8 +84,11 @@ public class PlayerService {
         return null;
     }
 
+    /*
+        TODO: This method is not complete for real json response. It is a test method. Change for real Json response
+     */
     public Player fetchAndUpdatePlayerInfo(int playerId) {
-        String playerInfoUrl = PYTHON_API_BASE_URL + "/players/" + playerId + "/info";
+        String playerInfoUrl = PYTHON_API_BASE_URL + "/players/" + playerId + "/info"; // Endpoint URL
 
         try {
             String playerInfoJson = restTemplate.getForObject(playerInfoUrl, String.class);
@@ -103,7 +109,7 @@ public class PlayerService {
                 player.setPlayerName(playerName);
                 player.setTeamId(teamId);
                 player.setPosition(position);
-                player.setCurrentPrice(10.00);
+                player.setCurrentPrice(10.00); // GameLogicService.updatePlayerPrices call
 
                 return playerDao.save(player);
             }
@@ -114,5 +120,4 @@ public class PlayerService {
         }
         return null;
     }
-
 }

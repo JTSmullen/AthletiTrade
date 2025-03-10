@@ -8,21 +8,22 @@ public class User {
     @Id
     private Integer userId;
     private String username;
-    private String password; // hash passwords in a real app
+    private String password; // hash passwords
     private String email;
     private Double balance;
 
-    public User() {
-    }
+    public User() {} // init empty instance
 
     public User(String username, String password, String email, Double balance) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.balance = balance;
-    }
+    } // init instance with info
 
-    // Getters and Setters
+    /*
+        Getters and Setters
+     */
     public Integer getUserId() {
         return userId;
     }

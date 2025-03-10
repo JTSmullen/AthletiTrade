@@ -12,9 +12,7 @@ public class Player {
     private String position;
     private Double currentPrice;
 
-    // Constructors, Getters, Setters
-    public Player() {
-    }
+    public Player() {} // init empty player instance
 
     public Player(Integer playerId, String playerName, Integer teamId, String position, Double currentPrice) {
         this.playerId = playerId;
@@ -22,8 +20,11 @@ public class Player {
         this.teamId = teamId;
         this.position = position;
         this.currentPrice = currentPrice;
-    }
+    } // init player instance with info from python_api
 
+    /*
+        Getters / Setters
+     */
     public Integer getPlayerId() {
         return playerId;
     }
@@ -63,5 +64,4 @@ public class Player {
     public void setCurrentPrice(Double currentPrice) {
         this.currentPrice = currentPrice;
     }
-
 }

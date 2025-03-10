@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+// ENDPOINTS FOR THE FRONT END TO CALL. FINISH OTHER THINGS FIRST
+
 @RestController
 @RequestMapping("/api/auth")
 public class UserController {

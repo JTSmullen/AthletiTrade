@@ -7,6 +7,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
+/*
+    Finished.
+    Launches and inits sql database in resources/database/schema.sql on build
+    Will reset the database and recreate the tables each run.
+ */
+
 @Configuration
 public class DatabaseConfig {
 

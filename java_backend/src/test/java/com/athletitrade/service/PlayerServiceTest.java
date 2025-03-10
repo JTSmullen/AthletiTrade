@@ -18,6 +18,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+// Mock use of PlayerService class to ensure java logic works to isolate errors.
+
 public class PlayerServiceTest {
 
     private PlayerService playerService;
