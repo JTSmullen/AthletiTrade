@@ -1,15 +1,13 @@
-package com.athletitrade;
+package com.athletitrade; // Keep the package as it is
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
+@ComponentScan(basePackages = "com.athletitrade") // Scan the entire com.athletitrade package
 public class AthletiTradeApp {
 
-    /*
-        Main File - DO NOT BUILD RUNNING THIS FILE
-        Use - 'mvn clean install -U' in terminal to run test and ensure pom.xml dependencies are imported
-     */
     public static void main(String[] args) {
         SpringApplication.run(AthletiTradeApp.class, args);
     }

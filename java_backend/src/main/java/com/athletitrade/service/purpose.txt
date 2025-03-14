@@ -1,7 +1,0 @@
-Service contains the Business logic and game rules.
-
-Breakdown -
--- Player Service -- Contains player logic
--- User Service -- Contains user logic
--- Trade Service -- Contains the trade logic
--- Game Logic Service -- Contains the price algorithm and leaderboard.

@@ -14,13 +14,14 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jackson.version>2.15.2</jackson.version>
         <h2.version>2.1.214</h2.version>
-        <!-- Updated to the latest Spring Boot version 3.4.3 -->
         <spring-boot.version>3.4.3</spring-boot.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <log4j2.version>2.22.1</log4j2.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Import the Spring Boot BOM (Bill of Materials) -->
+            <!-- Import the Spring Boot BOM -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -28,45 +29,95 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- Force exclusion of log4j-to-slf4j -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-to-slf4j</artifactId>
+                <version>${log4j2.version}</version>
+                <scope>import</scope> <!-- Assuming this scope is appropriate -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId> <!-- Exclude everything -->
+                    </exclusion>
+                </exclusions>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-        <!-- Spring Boot Starter Web for REST API -->
+        <!-- Spring Boot Starter Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>  <!-- Double check Exclusion on main dependencies -->
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-to-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- Spring Boot Starter Data JDBC for Database -->
+        <!-- Spring Boot Starter Data JDBC -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jdbc</artifactId>
+            <exclusions> <!-- Double check Exclusion on main dependencies -->
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-to-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- H2 Database (In-memory for simplicity, replace with MySQL) -->
+        <!-- H2 Database -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Jackson for JSON processing -->
+        <!-- Jackson -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
-        <!-- Spring Boot Starter Test for testing -->
+        <!-- Spring Boot Starter Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- WEKA Dependency -->
+        <dependency>
+            <groupId>nz.ac.waikato.cms.weka</groupId>
+            <artifactId>weka-stable</artifactId>
+            <version>3.8.6</version>
+        </dependency>
+
+        <!-- SLF4J API -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- Log4j 2 SLF4J Binding (Correct Implementation) -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+        </dependency>
+
+        <!-- Log4j 2 Core -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
-        <!-- Plugin Management (Optional but Recommended for Plugin Versions) -->
         <pluginManagement>
             <plugins>
                 <plugin>

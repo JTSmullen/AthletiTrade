@@ -9,9 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class PlayerService {
@@ -48,6 +46,9 @@ public class PlayerService {
                 List<Player> players = new ArrayList<>();
                 for (JsonNode playerNode : playersListNode) {
                     Player player = new Player(); // Init player
+
+//                    double currentPrice = playerStartingPriceCalculation(fetchPlayerGameStats(playerNode.get("id").asInt()).get("resultSets"));
+
                     player.setPlayerId(playerNode.get("id").asInt());
                     player.setPlayerName(playerNode.get("full_name").asText());
                     player.setTeamId(null); // Not in json response. Need to add in python_api. Set to null for build tests now
@@ -57,7 +58,7 @@ public class PlayerService {
                 }
                 return players;
             }
-        // Exceptions
+            // Exceptions
         } catch (IOException e) {
             System.err.println("Error fetching or parsing player list from Python API: " + e.getMessage());
         } catch (Exception e) {
@@ -75,7 +76,7 @@ public class PlayerService {
 
             return gameLogNode; // return json format of game data
 
-        // Exceptions
+            // Exceptions
         } catch (IOException e) {
             System.err.println("Error fetching game log for player ID " + playerId + " from Python API: " + e.getMessage());
         } catch (Exception e) {
@@ -119,5 +120,76 @@ public class PlayerService {
             System.err.println("General error fetching player info: " + e.getMessage());
         }
         return null;
+    }
+
+
+    public double playerStartingPriceCalculation(JsonNode playerGameStats) {
+        Map<String, Double> statsAverages = JsonColumnAverager(playerGameStats.get(0));
+
+        return 10.00;
+
+        // Get Player Data from the past year through NBA_API - DONE
+        // Iterate through the past years data to find average statistics - DONE
+        // Get their position and average play time per game - Done
+
+        // This will be called on build by PlayerService to calculate the starting price
+    }
+
+    public Map<String, Double> JsonColumnAverager(JsonNode playerGameStats) {
+        Map<String, Double> columnSum = new HashMap<>();
+        Map<String, Integer> columnCounts = new HashMap<>();
+        Map<String, Double> columnAverages = new HashMap<>();
+
+        JsonNode rowSetNode = playerGameStats.get("rowSet");
+        JsonNode headersNode = playerGameStats.get("headers");
+
+        if (!rowSetNode.isArray() || !headersNode.isArray()) {
+            System.err.println("Input JsonNode is not in the expected format (missing rowSet or headers array). Cannot average columns");
+            return columnAverages; // return empty map
+        }
+
+        List<String> headers = new ArrayList<>();
+        for (JsonNode headerNode : headersNode) {
+            headers.add(headerNode.asText());
+        }
+
+        for (JsonNode rowNode : rowSetNode) {
+            if (!rowNode.isArray()) {
+                System.err.println("Row in rowSet is not an array. Skipping row.");
+                continue;
+            }
+
+            for (int i = 0; i < headers.size(); i++) {
+                String headerName = headers.get(i);
+                if (i < rowNode.size()) {
+                    JsonNode valueNode = rowNode.get(i);
+
+                    if (valueNode.isNumber()) {
+                        double value = valueNode.asDouble();
+                        columnSum.put(headerName, columnSum.getOrDefault(headerName, 0.0) + value);
+                        columnCounts.put(headerName, columnCounts.getOrDefault(headerName, 0));
+                        columnCounts.put(headerName, columnCounts.get(headerName) + 1);
+                    } else {
+                        //TODO: Error logging but me lazy rn
+                    }
+                } else {
+                    // TODO: Error logging but me lazy rn
+                }
+            }
+        }
+
+        for (Map.Entry<String, Double> entry : columnSum.entrySet()) {
+            String columnName = entry.getKey();
+            double sum = entry.getValue();
+            int count = columnCounts.getOrDefault(columnName, 0);
+
+            if (count > 0) {
+                columnAverages.put(columnName, sum / count);
+            } else {
+                columnAverages.put(columnName, 0.0);
+            }
+        }
+
+        return columnAverages;
     }
 }
