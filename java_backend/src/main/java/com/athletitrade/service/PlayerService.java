@@ -18,6 +18,8 @@ public class PlayerService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    private final PriceCalculationUtils priceUtils;
+
     private static final String PYTHON_API_BASE_URL = "http://localhost:5000"; // Python API URL | upon build will not be on localhost
 
     // Autowired inits on build
@@ -26,6 +28,7 @@ public class PlayerService {
         this.playerDao = playerDao;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.priceUtils = new PriceCalculationUtils();
     }
 
     public Player getPlayerById(int playerId) {
@@ -45,19 +48,36 @@ public class PlayerService {
             if (playersListNode != null && playersListNode.isArray()) {
                 List<Player> players = new ArrayList<>();
                 for (JsonNode playerNode : playersListNode) {
-                    Player player = new Player(); // Init player
+                    int playerId = playerNode.get("id").asInt(); // Get ID *before* the API call
+                    JsonNode gameStats = fetchPlayerGameStats(playerId); // Get the game stats
 
-//                    double currentPrice = playerStartingPriceCalculation(fetchPlayerGameStats(playerNode.get("id").asInt()).get("resultSets"));
+                    double currentPrice = 0.0; // Default price if stats are unavailable
+                    if (gameStats != null) { // Check if gameStats is not null
+                        JsonNode resultSets = gameStats.get("resultSets");
+                        if (resultSets != null) { // Check if "resultSets" exists
+                            currentPrice = playerStartingPriceCalculation(resultSets);
+                        } else {
+                            System.err.println("Error: 'resultSets' not found for player ID " + playerId);
+                        }
+                    } else {
+                        System.err.println("Error: Could not fetch game stats for player ID " + playerId);
+                    }
 
-                    player.setPlayerId(playerNode.get("id").asInt());
+                    System.out.println(playerNode.get("full_name").asText() + ": $" + currentPrice);
+
+                    Player player = new Player();
+                    player.setPlayerId(playerId);  // Use the pre-fetched ID
                     player.setPlayerName(playerNode.get("full_name").asText());
-                    player.setTeamId(null); // Not in json response. Need to add in python_api. Set to null for build tests now
-                    player.setPosition(null); // Not in json response. Need to add in python_api. Set to null for build tests now
-                    player.setCurrentPrice(10.00); // This needs to become a method to calculate the starting price of player.
-                    players.add(player); // Add player instance to array list. THIS IS A LIST IN MEMORY instances are not named.
+                    player.setTeamId(null); // Placeholder
+                    player.setPosition(null); // Placeholder
+                    player.setCurrentPrice(currentPrice); // Use the calculated or default price
+                    players.add(player);
+
+                    Thread.sleep(2000); // Rate limiting
                 }
                 return players;
             }
+
             // Exceptions
         } catch (IOException e) {
             System.err.println("Error fetching or parsing player list from Python API: " + e.getMessage());
@@ -72,9 +92,8 @@ public class PlayerService {
 
         try {
             String gameLogJson = restTemplate.getForObject(gameLogUrl, String.class); // ping python_api and store response
-            JsonNode gameLogNode = objectMapper.readTree(gameLogJson); // change the string format to json format
 
-            return gameLogNode; // return json format of game data
+            return objectMapper.readTree(gameLogJson); // return json format of game data
 
             // Exceptions
         } catch (IOException e) {
@@ -124,72 +143,112 @@ public class PlayerService {
 
 
     public double playerStartingPriceCalculation(JsonNode playerGameStats) {
-        Map<String, Double> statsAverages = JsonColumnAverager(playerGameStats.get(0));
-
-        return 10.00;
-
-        // Get Player Data from the past year through NBA_API - DONE
-        // Iterate through the past years data to find average statistics - DONE
-        // Get their position and average play time per game - Done
-
-        // This will be called on build by PlayerService to calculate the starting price
+        Map<String, Double> statsAverages = priceUtils.JsonColumnAverager(playerGameStats.get(0));
+        double weight = priceUtils.weightedPlayerPerformance(statsAverages);
+        return priceUtils.calculatePriceFromWeight(weight);
     }
 
-    public Map<String, Double> JsonColumnAverager(JsonNode playerGameStats) {
-        Map<String, Double> columnSum = new HashMap<>();
-        Map<String, Integer> columnCounts = new HashMap<>();
-        Map<String, Double> columnAverages = new HashMap<>();
+    final public static class PriceCalculationUtils {
 
-        JsonNode rowSetNode = playerGameStats.get("rowSet");
-        JsonNode headersNode = playerGameStats.get("headers");
+        private final Map<String, Double> weights;
 
-        if (!rowSetNode.isArray() || !headersNode.isArray()) {
-            System.err.println("Input JsonNode is not in the expected format (missing rowSet or headers array). Cannot average columns");
-            return columnAverages; // return empty map
+        public PriceCalculationUtils() {
+            this.weights = new HashMap<>();
+            this.weights.put("AST", 0.15);
+            this.weights.put("REB", 0.12);
+            this.weights.put("PLUS_MINUS", 0.08);
+            this.weights.put("TOV", -0.05);
+            this.weights.put("STL", 0.10);
+            this.weights.put("BLK", 0.09);
+            this.weights.put("PTS", 0.20);
+            this.weights.put("FGA", -0.03);
+            this.weights.put("3P_PCT", 0.10);
+            this.weights.put("2P_PCT", 0.04);
         }
 
-        List<String> headers = new ArrayList<>();
-        for (JsonNode headerNode : headersNode) {
-            headers.add(headerNode.asText());
+        public PriceCalculationUtils(Map<String, Double> initialWeights) {
+            this.weights = new HashMap<>(initialWeights); // Defensive Copy
         }
 
-        for (JsonNode rowNode : rowSetNode) {
-            if (!rowNode.isArray()) {
-                System.err.println("Row in rowSet is not an array. Skipping row.");
-                continue;
+        public double calculatePriceFromWeight(double weight){
+            double price = weight * 10;
+            if(price <= 0) {
+                Random rand = new Random();
+                price = rand.nextDouble(.25, .5);
             }
+            return Math.round(price * 100.0) / 100.0;
+        }
 
-            for (int i = 0; i < headers.size(); i++) {
-                String headerName = headers.get(i);
-                if (i < rowNode.size()) {
-                    JsonNode valueNode = rowNode.get(i);
+        public double weightedPlayerPerformance(Map<String, Double> avgPlayerStats){
+            double weightedScore = 0.0;
+            for (Map.Entry<String, Double> entry : avgPlayerStats.entrySet()) {
+                String statName = entry.getKey();
+                double statValue = entry.getValue();
+                Double weight = weights.get(statName); // Use 'Double' not 'double' to handle nulls
 
-                    if (valueNode.isNumber()) {
-                        double value = valueNode.asDouble();
-                        columnSum.put(headerName, columnSum.getOrDefault(headerName, 0.0) + value);
-                        columnCounts.put(headerName, columnCounts.getOrDefault(headerName, 0));
-                        columnCounts.put(headerName, columnCounts.get(headerName) + 1);
-                    } else {
-                        //TODO: Error logging but me lazy rn
-                    }
+                if (weight != null) {
+                    weightedScore += statValue * weight; // Only add if stat is in weights
                 } else {
-                    // TODO: Error logging but me lazy rn
+                    // TODO: add a throw here to alert missing weight value
+                    // unlikely this happens but good to have
                 }
             }
+            return weightedScore;
         }
 
-        for (Map.Entry<String, Double> entry : columnSum.entrySet()) {
-            String columnName = entry.getKey();
-            double sum = entry.getValue();
-            int count = columnCounts.getOrDefault(columnName, 0);
+        public Map<String, Double> JsonColumnAverager(JsonNode playerGameStats) {
+            Map<String, Double> columnSum = new HashMap<>();
+            Map<String, Integer> columnCounts = new HashMap<>();
+            Map<String, Double> columnAverages = new HashMap<>();
 
-            if (count > 0) {
-                columnAverages.put(columnName, sum / count);
-            } else {
-                columnAverages.put(columnName, 0.0);
+            JsonNode rowSetNode = playerGameStats.get("rowSet");
+            JsonNode headersNode = playerGameStats.get("headers");
+
+            if (!rowSetNode.isArray() || !headersNode.isArray()) {
+                System.err.println("Input JsonNode is not in the expected format (missing rowSet or headers array). Cannot average columns");
+                return columnAverages; // return empty map
             }
-        }
 
-        return columnAverages;
+            List<String> headers = new ArrayList<>();
+            for (JsonNode headerNode : headersNode) {
+                headers.add(headerNode.asText());
+            }
+
+            for (JsonNode rowNode : rowSetNode) {
+                if (!rowNode.isArray()) {
+                    System.err.println("Row in rowSet is not an array. Skipping row.");
+                    continue;
+                }
+                for (int i = 0; i < headers.size(); i++) {
+                    String headerName = headers.get(i);
+                    if (i < rowNode.size()) {
+                        JsonNode valueNode = rowNode.get(i);
+
+                        if (valueNode.isNumber()) {
+                            double value = valueNode.asDouble();
+                            columnSum.put(headerName, columnSum.getOrDefault(headerName, 0.0) + value);
+                            columnCounts.put(headerName, columnCounts.getOrDefault(headerName, 0));
+                            columnCounts.put(headerName, columnCounts.get(headerName) + 1);
+                        } else {
+                            //TODO: Error logging but me lazy rn
+                        }
+                    } else {
+                        // TODO: Error logging but me lazy rn
+                    }
+                }
+            }
+            for (Map.Entry<String, Double> entry : columnSum.entrySet()) {
+                String columnName = entry.getKey();
+                double sum = entry.getValue();
+                int count = columnCounts.getOrDefault(columnName, 0);
+
+                if (count > 0) {
+                    columnAverages.put(columnName, sum / count);
+                } else {
+                    columnAverages.put(columnName, 0.0);
+                }
+            }
+            return columnAverages;
+        }
     }
 }
