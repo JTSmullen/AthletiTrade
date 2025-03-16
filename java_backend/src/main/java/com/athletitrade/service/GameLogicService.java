@@ -1,19 +1,58 @@
 package com.athletitrade.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.athletitrade.dao.PlayerDao;
+import com.athletitrade.dao.TradeDao;
 import com.athletitrade.model.Player;
 import com.athletitrade.model.Trade;
 
 @Service
 public class GameLogicService {
 
+    private static final Logger log = LoggerFactory.getLogger(GameLogicService.class);
+
+    private final PlayerService playerService;
+    private final PlayerDao playerDao;
+    private final TradeDao tradeDao;
+
+    // Create GameLogicService on launch
+    @Autowired
+    public GameLogicService(PlayerService playerService, PlayerDao playerDao, TradeDao tradeDao) {
+        this.playerService = playerService;
+        this.playerDao = playerDao;
+        this.tradeDao = tradeDao;
+    }
+
+    @Scheduled(fixedRate = 3600000) // Run every hour (3600000 milliseconds)
+    @Transactional
     public void updatePlayerPrices() {
-        // **TODO:** Implement price update algorithm here
-        System.out.println("GameLogicService: updatePlayerPrices() - Price update logic to be implemented.");
+        log.info("GameLogicService: updatePlayerPrices() - Starting price update process.");
+
+        // Fetch all players
+        List<Player> allPlayers = (List<Player>) playerDao.findAll();
+
+        // Iterate through each player and update their price
+        for (Player player : allPlayers) {
+            try {
+                updatePlayerPrice(player);
+            } catch (Exception e) { // Catch error and continue the process
+                log.error("Error updating price for player ID: {}", player.getPlayerId(), e);
+                // Consider if you want to continue processing other players or stop here
+            }
+        }
+
+        // Log the completion message
+        log.info("GameLogicService: updatePlayerPrices() - Price update process completed.");
     }
 
     private void updatePlayerPrice(Player player) {
@@ -31,7 +70,7 @@ public class GameLogicService {
         playerService.updatePlayerPrice(playerId, buyVolume, sellVolume);
     }
 
-    private Map<String, Integer> calculateTradeVolumes(List<Trade> trades) {
+    public Map<String, Integer> calculateTradeVolumes(List<Trade> trades) {
         // calculate the trading volumes
         Map<String, Integer> tradeVolumes = new HashMap<>();
         tradeVolumes.put("BUY", 0);
