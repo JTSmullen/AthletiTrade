@@ -3,6 +3,8 @@ package com.athletitrade.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
+
 @Table("USERS")
 public class User {
     @Id
@@ -10,11 +12,11 @@ public class User {
     private String username;
     private String password; // hash passwords
     private String email;
-    private Double balance;
+    private BigDecimal balance;
 
     public User() {} // init empty instance
 
-    public User(String username, String password, String email, Double balance) {
+    public User(String username, String password, String email, BigDecimal balance) {
         this.username = username;
         this.password = password;
         this.email = email;
@@ -56,11 +58,11 @@ public class User {
         this.email = email;
     }
 
-    public Double getBalance() {
+    public BigDecimal getBalance() {
         return balance;
     }
 
-    public void setBalance(Double balance) {
+    public void setBalance(BigDecimal balance) {
         this.balance = balance;
     }
 }

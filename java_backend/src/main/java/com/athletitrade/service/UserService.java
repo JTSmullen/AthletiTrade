@@ -5,6 +5,8 @@ import com.athletitrade.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public class UserService {
 
@@ -17,7 +19,7 @@ public class UserService {
 
     public User registerUser(String username, String password, String email) {
         // TODO: Hash the password before saving SHA256, user import security.
-        User newUser = new User(username, password, email, 10000.00);
+        User newUser = new User(username, password, email, BigDecimal.valueOf(10000.00));
         return userDao.save(newUser);
     }
 

@@ -3,6 +3,8 @@ package com.athletitrade.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
+
 @Table("PLAYERS") // Map to the "PLAYERS" table
 public class Player {
     @Id
@@ -10,11 +12,11 @@ public class Player {
     private String playerName;
     private Integer teamId;
     private String position;
-    private Double currentPrice;
+    private BigDecimal currentPrice;
 
     public Player() {} // init empty player instance
 
-    public Player(Integer playerId, String playerName, Integer teamId, String position, Double currentPrice) {
+    public Player(Integer playerId, String playerName, Integer teamId, String position, BigDecimal currentPrice) {
         this.playerId = playerId;
         this.playerName = playerName;
         this.teamId = teamId;
@@ -57,11 +59,11 @@ public class Player {
         this.position = position;
     }
 
-    public Double getCurrentPrice() {
+    public BigDecimal getCurrentPrice() {
         return currentPrice;
     }
 
-    public void setCurrentPrice(Double currentPrice) {
+    public void setCurrentPrice(BigDecimal currentPrice) {
         this.currentPrice = currentPrice;
     }
 }
