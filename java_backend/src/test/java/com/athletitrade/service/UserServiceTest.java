@@ -5,6 +5,9 @@ import com.athletitrade.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.math.BigDecimal;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.*;
@@ -25,7 +28,7 @@ public class UserServiceTest {
 
         userService = new UserService(userDao);
 
-        testUser = new User("testuser", "password123", "test@example.com", 10000.00);
+        testUser = new User("testuser", "password123", "test@example.com", BigDecimal.valueOf(10000.00));
         testUser.setUserId(1);
     }
 
@@ -61,7 +64,7 @@ public class UserServiceTest {
 
     @Test
     void registerUser_ValidInput_UserSavedAndReturned() {
-        User newUser = new User("newUser", "newPassword", "new@example.com", 10000.00);
+        User newUser = new User("newUser", "newPassword", "new@example.com", BigDecimal.valueOf(10000.00));
 
         when(userDao.save(Mockito.any(User.class))).thenReturn(newUser); // Mock save to return newUser
 

@@ -1,2 +1,7 @@
-package com.athletitrade.exception;public class UserNotFoundException {
+package com.athletitrade.exception;
+
+public class UserNotFoundException extends RuntimeException {
+    public UserNotFoundException(String message) {
+        super(message);
+    }
 }

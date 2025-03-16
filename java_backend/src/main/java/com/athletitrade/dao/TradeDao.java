@@ -1,10 +1,18 @@
 package com.athletitrade.dao;
 
-import com.athletitrade.model.Trade;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-// trade data access objects (JDBC calls)
+import com.athletitrade.model.Trade;
 
 public interface TradeDao extends CrudRepository<Trade, Integer> {
-    // add custom query methods here if needed later
+    List<Trade> findByUserId(Integer userId);
+
+    @Query("SELECT t FROM Trade t WHERE t.userId = :userId AND t.playerId = :playerId")
+    List<Trade> findByUserIdAndPlayerId(Integer userId, Integer playerId);
+
+    @Query("SELECT t FROM Trade t WHERE t;playerId = :playerId")
+    List<Trade> findByPlayerId(Integer playerId);
 }

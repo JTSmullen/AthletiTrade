@@ -3,6 +3,7 @@ package com.athletitrade.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 @Table("TRADES") // Map to the "trades" table
@@ -13,13 +14,13 @@ public class Trade {
     private Integer playerId;
     private String tradeType; // 'BUY' or 'SELL' | maybe switch to enum for consistency
     private Integer quantity;
-    private Double price;
+    private BigDecimal price;
     private Timestamp tradeTimestamp;
 
 
     public Trade() {} // init empty instance
 
-    public Trade(Integer userId, Integer playerId, String tradeType, Integer quantity, Double price) {
+    public Trade(Integer userId, Integer playerId, String tradeType, Integer quantity, BigDecimal price) {
         this.userId = userId;
         this.playerId = playerId;
         this.tradeType = tradeType;
@@ -70,11 +71,11 @@ public class Trade {
         this.quantity = quantity;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 
