@@ -1,17 +1,21 @@
 package com.athletitrade.service;
 
-import com.athletitrade.dao.PlayerDao;
-import com.athletitrade.model.Player;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.web.client.RestTemplate;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.web.client.RestTemplate;
+
+import com.athletitrade.AthletiTradeApp;
+import com.athletitrade.config.AppConfig;
+import com.athletitrade.dao.PlayerDao;
+import com.athletitrade.dao.PriceHistoryDao;
+import com.athletitrade.model.Player;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class PlayerServiceIntegrationTest {
 
@@ -20,6 +24,9 @@ public class PlayerServiceIntegrationTest {
     private RestTemplate restTemplate;
     private PlayerDao playerDao;
     private ObjectMapper objectMapper;
+    private AppConfig appConfig;
+    private AthletiTradeApp athletiTradeApp;
+    private PriceHistoryDao priceHistoryDao;
 
     // Before each set up a mock DAO
     @BeforeEach
@@ -27,10 +34,15 @@ public class PlayerServiceIntegrationTest {
         restTemplate = new RestTemplate();
 
         playerDao = Mockito.mock(PlayerDao.class);
+        appConfig = Mockito.mock(AppConfig.class);
+        athletiTradeApp = Mockito.mock(AthletiTradeApp.class);
+        priceHistoryDao = Mockito.mock(PriceHistoryDao.class);
 
         objectMapper = new ObjectMapper();
 
-        playerService = new PlayerService(playerDao, restTemplate, objectMapper);
+        // Use the updated constructor
+        playerService = new PlayerService(playerDao, restTemplate, objectMapper, appConfig, athletiTradeApp,
+                priceHistoryDao);
     }
 
     // Get Players from API
