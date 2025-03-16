@@ -74,7 +74,7 @@ public class UserServiceTest {
         assertEquals("newUser", registeredUser.getUsername());
         assertEquals("new@example.com", registeredUser.getEmail());
         assertEquals("newPassword", registeredUser.getPassword());
-        assertEquals(10000.00, registeredUser.getBalance());
+        assertEquals(BigDecimal.valueOf(10000.00), registeredUser.getBalance());
 
         verify(userDao, Mockito.times(1)).save(Mockito.any(User.class));
     }
