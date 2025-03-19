@@ -1,66 +1,70 @@
 package com.athletitrade.model;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import java.time.LocalDateTime;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
-
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-
-@Table("TRADES") // Map to the "trades" table
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "trades")
 public class Trade {
     @Id
-    private Integer tradeId;
-    private Integer userId;
-    private Integer playerId;
-    private String tradeType; // 'BUY' or 'SELL' | maybe switch to enum for consistency
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "player_id", nullable = false)
+    private Player player;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "buy_sell", nullable = false)
+    private BuySell buySell;  // Use an enum
+
+    @Column(nullable = false)
     private Integer quantity;
-    private BigDecimal price;
-    private Timestamp tradeTimestamp;
 
+    @Column(nullable = false)
+    private Double price;
 
-    public Trade() {} // init empty instance
+    @Column(nullable = false)
+    private LocalDateTime timestamp;
 
-    public Trade(Integer userId, Integer playerId, String tradeType, Integer quantity, BigDecimal price) {
-        this.userId = userId;
-        this.playerId = playerId;
-        this.tradeType = tradeType;
-        this.quantity = quantity;
-        this.price = price;
-    } // init instance with info
-
-    /*
-        Getters and Setters
-     */
-    public Integer getTradeId() {
-        return tradeId;
+    public enum BuySell {
+        BUY, SELL
     }
 
-    public void setTradeId(Integer tradeId) {
-        this.tradeId = tradeId;
+    public Long getId() {
+        return id;
     }
 
-    public Integer getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(Integer userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
-    public Integer getPlayerId() {
-        return playerId;
+    public Player getPlayer() {
+        return player;
     }
 
-    public void setPlayerId(Integer playerId) {
-        this.playerId = playerId;
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
+    public BuySell getBuySell() {
+        return buySell;
     }
 
-    public String getTradeType() {
-        return tradeType;
-    }
-
-    public void setTradeType(String tradeType) {
-        this.tradeType = tradeType;
+    public void setBuySell(BuySell buySell) {
+        this.buySell = buySell;
     }
 
     public Integer getQuantity() {
@@ -71,19 +75,19 @@ public class Trade {
         this.quantity = quantity;
     }
 
-    public BigDecimal getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(BigDecimal price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 
-    public Timestamp getTradeTimestamp() {
-        return tradeTimestamp;
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 
-    public void setTradeTimestamp(Timestamp tradeTimestamp) {
-        this.tradeTimestamp = tradeTimestamp;
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
     }
 }

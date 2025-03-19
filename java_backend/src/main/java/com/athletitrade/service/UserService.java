@@ -1,39 +1,42 @@
 package com.athletitrade.service;
 
-import com.athletitrade.dao.UserDao;
 import com.athletitrade.model.User;
+import com.athletitrade.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
 
 @Service
 public class UserService {
 
-    private final UserDao userDao;
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
-    public UserService(UserDao userDao) {
-        this.userDao = userDao;
-    }
+    private PasswordEncoder passwordEncoder;
 
-    public User registerUser(String username, String password, String email) {
-        // TODO: Hash the password before saving SHA256, user import security.
-        User newUser = new User(username, password, email, BigDecimal.valueOf(10000.00));
-        return userDao.save(newUser);
-    }
-
-    public User loginUser(String username, String password) {
-        User user = userDao.findByUsername(username);
-        if (user != null && user.getPassword().equals(password)) { // Replace with hashed password comparison once @registerUser uses SHA256
-            return user;
+    public User registerUser(User user) {
+        // Check if username already exists
+        if (userRepository.existsByUsername(user.getUsername())) {
+            throw new IllegalArgumentException("Username already exists.");
         }
-        return null; // Add throw exception
+
+        // Check if email already exists
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new IllegalArgumentException("Email already exists.");
+        }
+
+        // Hash the password before saving
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setBalance(1000.00); //Initial Balance
+        return userRepository.save(user);
     }
 
-    public User getUserByUsername(String username) {
-        return userDao.findByUsername(username);
-    } // Find a player in a search by username
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
+    }
 
-    // other user-related service methods | update profile, get balance, ect
+    public User findByEmail(String email){
+        return userRepository.findByEmail(email).orElse(null);
+    }
 }

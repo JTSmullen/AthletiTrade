@@ -1,69 +1,26 @@
+// Player.java
 package com.athletitrade.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
-import java.math.BigDecimal;
-
-@Table("PLAYERS") // Map to the "PLAYERS" table
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "players")
 public class Player {
     @Id
-    private Integer playerId;
-    private String playerName;
-    private Integer teamId;
-    private String position;
-    private BigDecimal currentPrice;
+    private Integer id;
 
-    public Player() {} // init empty player instance
+    @Column(name = "full_name")
+    private String fullName;
 
-    public Player(Integer playerId, String playerName, Integer teamId, String position, BigDecimal currentPrice) {
-        this.playerId = playerId;
-        this.playerName = playerName;
-        this.teamId = teamId;
-        this.position = position;
-        this.currentPrice = currentPrice;
-    } // init player instance with info from python_api
+    public String getFullName(){return fullName;}
 
-    /*
-        Getters / Setters
-     */
-    public Integer getPlayerId() {
-        return playerId;
-    }
+    public Integer getId(){return id;}
 
-    public void setPlayerId(Integer playerId) {
-        this.playerId = playerId;
-    }
-
-    public String getPlayerName() {
-        return playerName;
-    }
-
-    public void setPlayerName(String playerName) {
-        this.playerName = playerName;
-    }
-
-    public Integer getTeamId() {
-        return teamId;
-    }
-
-    public void setTeamId(Integer teamId) {
-        this.teamId = teamId;
-    }
-
-    public String getPosition() {
-        return position;
-    }
-
-    public void setPosition(String position) {
-        this.position = position;
-    }
-
-    public BigDecimal getCurrentPrice() {
-        return currentPrice;
-    }
-
-    public void setCurrentPrice(BigDecimal currentPrice) {
-        this.currentPrice = currentPrice;
-    }
+    // Other static player info (team, position, etc.) - if needed
 }

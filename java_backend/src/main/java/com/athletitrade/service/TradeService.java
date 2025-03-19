@@ -1,151 +1,118 @@
 package com.athletitrade.service;
 
-import com.athletitrade.dao.PlayerDao;
-import com.athletitrade.dao.TradeDao;
-import com.athletitrade.dao.UserDao;
-import com.athletitrade.exception.InsufficientFundsException;
-import com.athletitrade.exception.InvalidTradeException;
-import com.athletitrade.exception.PlayerNotFoundException;
-import com.athletitrade.exception.UserNotFoundException;
 import com.athletitrade.model.Player;
+import com.athletitrade.model.PlayerPriceHistory;
 import com.athletitrade.model.Trade;
 import com.athletitrade.model.User;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.athletitrade.repository.PlayerPriceHistoryRepository;
+import com.athletitrade.repository.PlayerRepository;
+import com.athletitrade.repository.TradeRepository;
+import com.athletitrade.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class TradeService {
 
-    private static final Logger log = LoggerFactory.getLogger(TradeService.class);
-
-    private final TradeDao tradeDao;
-    private final UserDao userDao;
-    private final PlayerDao playerDao;
-    private final PlayerService playerService; // Inject PlayerService
-
-    // Constructor to set params
     @Autowired
-    public TradeService(TradeDao tradeDao, UserDao userDao, PlayerDao playerDao, PlayerService playerService) {
-        this.tradeDao = tradeDao;
-        this.userDao = userDao;
-        this.playerDao = playerDao;
-        this.playerService = playerService;
-    }
+    private TradeRepository tradeRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PlayerRepository playerRepository;
 
-    // Save a trade in the database
-    @Transactional
-    public Trade recordTrade(Trade trade) {
-        return tradeDao.save(trade);
-    }
+    @Autowired
+    private PlayerPriceHistoryRepository playerPriceHistoryRepository;
 
-    // User buys a player
+    @Autowired
+    private NBAPriceService nbaPriceService; // For getting the current price
+
+
     @Transactional
-    public Trade executeBuyTrade(Integer userId, Integer playerId, int quantity) {
-        // quantity must be positive
+    public Trade executeTrade(Long userId, Integer playerId, Trade.BuySell buySell, Integer quantity) {
+        // Input validation
         if (quantity <= 0) {
-            throw new InvalidTradeException("Quantity must be positive.");
+            throw new IllegalArgumentException("Quantity must be positive.");
         }
+        // 1. Get the user and player.
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid player ID: " + playerId));
 
-        // 2. Get User and Player
-        User user = userDao.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
-        Player player = playerDao.findById(playerId).orElseThrow(() -> new PlayerNotFoundException("Player not found with ID: " + playerId));
-
-        // 3. Calculate total cost
-        BigDecimal tradePrice = player.getCurrentPrice();
-        BigDecimal totalCost = tradePrice.multiply(BigDecimal.valueOf(quantity));
-
-        // 4. Check if user has sufficient funds
-        if (user.getBalance().compareTo(totalCost) < 0) {
-            throw new InsufficientFundsException("Insufficient funds to complete the trade.");
-        }
-
-        // 5. Deduct cost from user's balance
-        user.setBalance(user.getBalance().subtract(totalCost));
-        userDao.save(user); // Save updated user balance
-
-        // 6. Create and save the trade record
-        Trade trade = new Trade();
-        trade.setUserId(userId);
-        trade.setPlayerId(playerId);
-        trade.setTradeType("BUY");
-        trade.setQuantity(quantity);
-        trade.setPrice(tradePrice); // Record the price *at the time of the trade*
-        return tradeDao.save(trade); // Save trade and return saved object
-
-    }
+        // 2. Get the current price of the player.
+        double currentPrice = nbaPriceService.getCurrentPrice(playerId);
 
 
-    @Transactional
-    public Trade executeSellTrade(Integer userId, Integer playerId, int quantity) {
-        // Validate input. No shorting players (maybe in the future)
-        if (quantity <= 0) {
-            throw new InvalidTradeException("Quantity must be positive.");
-        }
-
-        // Get the playerID and userID to change values in database
-        User user = userDao.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
-        Player player = playerDao.findById(playerId).orElseThrow(() -> new PlayerNotFoundException("Player not found with ID: " + playerId));
-
-        // check to see if that user owns the player
-        int ownedQuantity = getQuantityOwned(userId, playerId);
-        if (ownedQuantity < quantity){
-            throw new InsufficientFundsException("User does not own enough of this player");
-        }
-
-        // calculate the amount the user will receive
-        BigDecimal tradePrice = player.getCurrentPrice();
-        BigDecimal totalCredit = tradePrice.multiply(BigDecimal.valueOf(quantity));
-
-        // Add the credit to the users balance (This is available and spendable balance)
-        user.setBalance(user.getBalance().add(totalCredit));
-        userDao.save(user);
-
-        // Create new trade transaction
-        Trade trade = new Trade();
-        trade.setUserId(userId);
-        trade.setPlayerId(playerId);
-        trade.setTradeType("SELL");
-        trade.setQuantity(quantity);
-        trade.setPrice(tradePrice);
-        return tradeDao.save(trade);
-    }
-
-    // Return all trades by a  user
-    public List<Trade> getTradesByUser(Integer userId) {
-        return tradeDao.findByUserId(userId);
-    }
-
-    // Get the amount of buys and sell the player has, subtract them to find how many trades user is in
-    public int getQuantityOwned(Integer userId, Integer playerId) {
-        List<Trade> userTrades = tradeDao.findByUserIdAndPlayerId(userId, playerId);
-
-        int bought = 0;
-        int sold = 0;
-
-        for(Trade trade : userTrades) {
-            if (trade.getTradeType().equals("BUY")) {
-                bought += trade.getQuantity();
+        // 3. Check if it's a buy or sell order.
+        if (buySell == Trade.BuySell.BUY) {
+            // 4. (Buy) Check if the user has enough balance.
+            double totalPrice = currentPrice * quantity;
+            if (user.getBalance() < totalPrice) {
+                throw new RuntimeException("Insufficient balance.");
             }
-            else {
-                sold += trade.getQuantity();
+
+            // 5. (Buy) Deduct the balance from the user.
+            user.setBalance(user.getBalance() - totalPrice);
+
+        } else { // Sell
+            //check that use owns shares
+            //TODO
+
+            //add to user balance
+            double totalPrice = currentPrice * quantity;
+            user.setBalance(user.getBalance() + totalPrice);
+        }
+
+
+        // 6. Create the trade record.
+        Trade trade = new Trade();
+        trade.setUser(user);
+        trade.setPlayer(player);
+        trade.setBuySell(buySell);
+        trade.setQuantity(quantity);
+        trade.setPrice(currentPrice);
+        trade.setTimestamp(LocalDateTime.now());
+
+        // 7. Save the trade.
+        tradeRepository.save(trade);
+
+        // 8. Update the user (balance might have changed).
+        userRepository.save(user); // Save updated user
+
+
+        return trade;
+    }
+
+    public List<PlayerPriceHistory> getPriceHistory(Integer playerId) {
+        return playerPriceHistoryRepository.findByPlayerIdOrderByTimestampDesc(playerId);
+    }
+
+    public List<Trade> getTradesByUser(Long userId) {
+        return tradeRepository.findByUserId(userId);
+    }
+
+    public List<Trade> getTradesByPlayer(Integer playerId){
+        return tradeRepository.findByPlayerId(playerId);
+    }
+
+    private int getCurrentHoldings(User user, Player player) {
+        List<Trade> trades = tradeRepository.findByUserAndPlayerOrderByTimestampDesc(user, player);
+
+        int holdings = 0;
+        for (Trade trade : trades) {
+            if (trade.getBuySell() == Trade.BuySell.BUY) {
+                holdings += trade.getQuantity();
+            } else {
+                holdings -= trade.getQuantity();
             }
         }
-
-        return bought - sold;
+        return holdings;
     }
 
-    // Return all trades made
-    public List<Trade> getAllTrades() {
-        return (List<Trade>) tradeDao.findAll();
-    }
-
-    // ... (other methods, e.g., getTradesByPlayer, cancelTrade, etc.) ...
 }

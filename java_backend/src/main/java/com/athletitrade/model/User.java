@@ -1,39 +1,38 @@
 package com.athletitrade.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import java.util.List;
 
-import java.math.BigDecimal;
-
-@Table("USERS")
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "users")
 public class User {
     @Id
-    private Integer userId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
     private String username;
-    private String password; // hash passwords
+
+    @Column(nullable = false)
+    private String password; // Store the *hashed* password
+
+    @Column(unique = true, nullable = false)
     private String email;
-    private BigDecimal balance;
 
-    public User() {} // init empty instance
+    private Double balance;
 
-    public User(String username, String password, String email, BigDecimal balance) {
-        this.username = username;
-        this.password = password;
-        this.email = email;
-        this.balance = balance;
-    } // init instance with info
+    //Consider if you need a separate table for a 1 to many relation
+    //private List<Integer> player_ids;
 
-    /*
-        Getters and Setters
-     */
-    public Integer getUserId() {
-        return userId;
+    public Long getId() {
+        return id;
     }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
-
     public String getUsername() {
         return username;
     }
@@ -57,12 +56,11 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
-
-    public BigDecimal getBalance() {
+    public Double getBalance() {
         return balance;
     }
 
-    public void setBalance(BigDecimal balance) {
+    public void setBalance(Double balance) {
         this.balance = balance;
     }
 }
