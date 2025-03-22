@@ -27,33 +27,28 @@ public class TradeController {
     @PostMapping("/buy")
     public ResponseEntity<?> executeBuyTrade(@Valid @RequestBody BuyOrderDto buyOrderDto, @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            // Get the username from the UserDetails
             String username = userDetails.getUsername();
 
-            // Find the User entity by username (you'll need a method in UserService for this)
-            // Assuming you have a UserService and a findByUsername method:
             User user = userService.findByUsername(username);
             if (user == null) {
-                return new ResponseEntity<>("User not found", HttpStatus.UNAUTHORIZED); // Should not happen if auth is working
+                return new ResponseEntity<>("User not found", HttpStatus.UNAUTHORIZED);
             }
 
 
             Trade trade = tradeService.executeTrade(user.getId(), buyOrderDto.getPlayerId(), Trade.BuySell.BUY, buyOrderDto.getQuantity());
-            return new ResponseEntity<>(trade, HttpStatus.CREATED); // 201 Created
+            return new ResponseEntity<>(trade, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST); // 400 Bad Request
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST); // Or 500 Internal Server Error, depending on the exception
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PostMapping("/sell")
     public ResponseEntity<?> executeSellTrade(@Valid @RequestBody SellOrderDto sellOrderDto, @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            // Get the username from UserDetails
             String username = userDetails.getUsername();
 
-            // Find the User entity
             User user = userService.findByUsername(username);
             if (user == null) {
                 return new ResponseEntity<>("User not found", HttpStatus.UNAUTHORIZED);

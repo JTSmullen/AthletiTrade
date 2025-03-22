@@ -13,13 +13,11 @@ import lombok.Setter;
 @Setter
 public class PlayerStatsDto {
     private Double weighted_average;
-    private String gamelog; // Keep this as String for now
-
-    // Assuming these fields exist in the JSON you get from Python
+    private String gamelog;
     private Double PTS;
     private Double REB;
     private Double AST;
-    private Double TOV; //Needed for calculatePrice
+    private Double TOV;
 
     public Double getPTS() {
         return PTS;
@@ -39,6 +37,4 @@ public class PlayerStatsDto {
     public Double getWeightedAverage() {
         return weighted_average;
     }
-
-    //There is no Id to get here, this is a DTO of stats, not the player.
 }

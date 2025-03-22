@@ -30,47 +30,35 @@ public class TradeService {
     private PlayerPriceHistoryRepository playerPriceHistoryRepository;
 
     @Autowired
-    private NBAPriceService nbaPriceService; // For getting the current price
+    private NBAPriceService nbaPriceService;
 
 
     @Transactional
     public Trade executeTrade(Long userId, Integer playerId, Trade.BuySell buySell, Integer quantity) {
-        // Input validation
         if (quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be positive.");
         }
-        // 1. Get the user and player.
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid player ID: " + playerId));
 
-        // 2. Get the current price of the player.
         double currentPrice = nbaPriceService.getCurrentPrice(playerId);
 
-
-        // 3. Check if it's a buy or sell order.
         if (buySell == Trade.BuySell.BUY) {
-            // 4. (Buy) Check if the user has enough balance.
             double totalPrice = currentPrice * quantity;
             if (user.getBalance() < totalPrice) {
                 throw new RuntimeException("Insufficient balance.");
             }
 
-            // 5. (Buy) Deduct the balance from the user.
             user.setBalance(user.getBalance() - totalPrice);
 
-        } else { // Sell
-            //check that use owns shares
-            //TODO
-
-            //add to user balance
+        } else {
             double totalPrice = currentPrice * quantity;
             user.setBalance(user.getBalance() + totalPrice);
         }
 
-
-        // 6. Create the trade record.
         Trade trade = new Trade();
         trade.setUser(user);
         trade.setPlayer(player);
@@ -79,11 +67,9 @@ public class TradeService {
         trade.setPrice(currentPrice);
         trade.setTimestamp(LocalDateTime.now());
 
-        // 7. Save the trade.
         tradeRepository.save(trade);
 
-        // 8. Update the user (balance might have changed).
-        userRepository.save(user); // Save updated user
+        userRepository.save(user);
 
 
         return trade;

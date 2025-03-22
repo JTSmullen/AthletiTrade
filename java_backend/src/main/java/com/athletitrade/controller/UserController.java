@@ -1,11 +1,8 @@
 package com.athletitrade.controller;
 
-import com.athletitrade.dto.LoginDto;
-import com.athletitrade.dto.RegistrationDto;
-import com.athletitrade.model.User;
-import com.athletitrade.security.JwtTokenUtil;
-import com.athletitrade.service.UserService;
-import jakarta.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +16,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.athletitrade.dto.LoginDto;
+import com.athletitrade.dto.RegistrationDto;
+import com.athletitrade.model.User;
+import com.athletitrade.security.JwtTokenUtil;
+import com.athletitrade.service.UserService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
@@ -54,13 +56,13 @@ public class UserController {
     public ResponseEntity<?> loginUser(@Valid @RequestBody LoginDto loginDto) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword()));
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String token = jwtTokenUtil.generateToken(userDetails);
 
-            // Create a response object containing the token (and optionally other user info)
+            // Create a response object containing the token (and optionally other user
+            // info)
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
             // You could add username, email, etc. here if needed by the frontend

@@ -21,11 +21,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
-        // Create a Spring Security User object.  We're using an empty list for authorities (roles) for now.
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                new ArrayList<>() // Empty list of authorities (roles)
+                new ArrayList<>()
         );
     }
 }

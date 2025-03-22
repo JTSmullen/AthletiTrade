@@ -1,9 +1,9 @@
 package com.athletitrade.security;
 
-import com.athletitrade.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.athletitrade.service.UserDetailsServiceImpl;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -22,11 +24,10 @@ public class SecurityConfig {
     private UserDetailsServiceImpl userDetailsService;
 
     @Autowired
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint; // Create this class
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Autowired
-    private JwtRequestFilter jwtRequestFilter; // Create this class
-
+    private JwtRequestFilter jwtRequestFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -34,24 +35,26 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless API (using JWT)
+                .csrf(csrf -> csrf.disable())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Use stateless sessions
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
                     auth
-                            .requestMatchers("/api/users/register", "/api/users/login").permitAll() // Allow registration and login
-                            .anyRequest().authenticated(); // Require authentication for all other requests
+                            .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                            .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll() // Allow OPTIONS requests to
+                                                                                        // /api/**
+                            .anyRequest().authenticated();
                 });
 
-        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
+        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

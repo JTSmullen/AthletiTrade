@@ -20,15 +20,12 @@ public class User {
     private String username;
 
     @Column(nullable = false)
-    private String password; // Store the *hashed* password
+    private String password;
 
     @Column(unique = true, nullable = false)
     private String email;
 
     private Double balance;
-
-    //Consider if you need a separate table for a 1 to many relation
-    //private List<Integer> player_ids;
 
     public Long getId() {
         return id;

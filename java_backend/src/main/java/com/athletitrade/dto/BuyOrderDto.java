@@ -25,4 +25,6 @@ public class BuyOrderDto {
     public Integer getQuantity(){
         return quantity;
     }
+    public void setPlayerId(Integer playerId){this.playerId = playerId;}
+    public void setQuantity(Integer quantity){this.quantity = quantity;}
 }

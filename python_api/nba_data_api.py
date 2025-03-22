@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, request
 from nba_api.stats.static import players, teams
 from nba_api.stats.endpoints import playergamelog, scoreboardv2, commonplayerinfo
-# Removed: from nba_api.stats.library.parameters import GameDate  # No longer needed
 import pandas as pd
 from datetime import datetime, timedelta
 import requests
@@ -9,15 +8,6 @@ import requests
 app = Flask(__name__)
 
 # --- Helper Functions ---
-
-def get_player_id_by_name(player_name):
-    """Finds a player ID by their full name."""
-    try:
-        nba_players = players.get_players()
-        player = [player for player in nba_players if player['full_name'] == player_name][0]
-        return player['id']
-    except IndexError:
-        return None
 
 def get_team_id_by_name(team_name):
     """Finds a team ID by their name or abbreviation."""
@@ -31,17 +21,40 @@ def get_team_id_by_name(team_name):
 def get_player_game_log(player_id):
     """Fetches the game log for a player for the past year."""
     try:
-        today = datetime.today()
-        one_year_ago = today - timedelta(days=365)
-        date_from = one_year_ago.strftime('%m/%d/%Y')  # Format for nba_api
-        date_to = today.strftime('%m/%d/%Y')
-
-        game_log = playergamelog.PlayerGameLog(player_id=player_id, date_from_nullable=date_from, date_to_nullable=date_to)
+        game_log = playergamelog.PlayerGameLog(player_id=player_id, season=2024)
         df = game_log.get_data_frames()[0]
         return df
     except requests.exceptions.RequestException as e:
         print(f"Error fetching game log: {e}")
         return pd.DataFrame()
+    
+def get_player_starting_price_from_stats(player_stats):
+    """Calculates the starting price for a player based on their stats."""
+    if player_stats.empty:
+        return 0
+
+    weights = {
+        "AST": 0.15,
+        "REB": 0.12,
+        "PLUS_MINUS": 0.08,
+        "TOV": -0.05,
+        "STL": 0.10,
+        "BLK": 0.09,
+        "PTS": 0.20,
+        "FGA": -0.03,
+        "FG3_PCT": 0.10,
+        "FG_PCT": 0.04,
+    }
+
+    weighted_sum = 0
+    for stat, weight in weights.items():
+        if stat in player_stats.columns and pd.api.types.is_numeric_dtype(player_stats[stat]):
+            if stat.endswith("_PCT"):
+                weighted_sum += player_stats[stat].mean() * weight
+            else:
+                weighted_sum += player_stats[stat].mean() * weight
+    return weighted_sum
+
 
 def calculate_weighted_average(stats, rolling=False, last_n_games=10):
     """Calculates the weighted average of player stats using *only* the provided weights.
@@ -60,7 +73,6 @@ def calculate_weighted_average(stats, rolling=False, last_n_games=10):
     if rolling:
         stats = stats.head(last_n_games)
 
-    # *Only* these weights are used:
     weights = {
         "AST": 0.15,
         "REB": 0.12,
@@ -71,25 +83,21 @@ def calculate_weighted_average(stats, rolling=False, last_n_games=10):
         "PTS": 0.20,
         "FGA": -0.03,
         "FG3_PCT": 0.10,
-        "FG_PCT": 0.04,  # Corrected to FG_PCT
+        "FG_PCT": 0.04,
     }
 
     weighted_sum = 0
     for stat, weight in weights.items():
         if stat in stats.columns and pd.api.types.is_numeric_dtype(stats[stat]):
-            # Handle percentages correctly
             if stat.endswith("_PCT"):
                 weighted_sum += stats[stat].mean() * weight
             else:
                 weighted_sum += stats[stat].mean() * weight
-        # No 'else' condition:  If the stat isn't present or isn't numeric, we *ignore* it.
-
     return {"weighted_average": weighted_sum}
 
 def get_games_on_date(date_str):
     """Gets the games on a specific date."""
     try:
-        # Format the date string to YYYY-MM-DD for the API
         game_date = datetime.strptime(date_str, '%Y-%m-%d').strftime('%Y-%m-%d')
         scoreboard = scoreboardv2.ScoreboardV2(game_date=game_date)
         games_df = scoreboard.get_data_frames()[0]
@@ -108,7 +116,7 @@ def get_games_on_date(date_str):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching scoreboard: {e}")
         return []
-    except ValueError as e: # Handles Invalid date input
+    except ValueError as e:
         print(f"Invalid date format {e}")
         return []
 
@@ -119,13 +127,15 @@ def get_live_scoreboard():
 
 # --- API Endpoints ---
 
-@app.route('/api/player/<player_name>/stats', methods=['GET'])
-def get_player_stats(player_name):
-    """Gets stats for a player by name, with rolling average option."""
-    player_id = get_player_id_by_name(player_name)
-    if player_id is None:
-        return jsonify({'error': 'Player not found'}), 404
+@app.route('/api/player/<int:player_id>/starting_price', methods=['GET'])
+def get_player_starting_price(player_id):
+    """Gets the starting price for a player."""
+    player_stats = get_player_game_log(player_id)
+    return jsonify({'starting_price': get_player_starting_price_from_stats(player_stats)})
 
+@app.route('/api/player/<int:player_id>/stats', methods=['GET'])
+def get_player_stats(player_id):
+    """Gets stats for a player by name, with rolling average option."""
     rolling = request.args.get('rolling', 'false').lower() == 'true'
 
     game_log_df = get_player_game_log(player_id)

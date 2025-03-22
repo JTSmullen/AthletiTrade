@@ -22,5 +22,6 @@ public class Player {
 
     public Integer getId(){return id;}
 
-    // Other static player info (team, position, etc.) - if needed
+    public void setId(Integer Id){this.id = Id;}
+    public void setFullName(String fullName){this.fullName = fullName;}
 }

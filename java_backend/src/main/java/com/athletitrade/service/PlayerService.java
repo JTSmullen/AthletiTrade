@@ -2,6 +2,8 @@ package com.athletitrade.service;
 
 import com.athletitrade.dto.PlayerStatsDto;
 import com.athletitrade.model.Player;
+import com.athletitrade.model.PlayerPriceHistory;
+import com.athletitrade.repository.PlayerPriceHistoryRepository;
 import com.athletitrade.repository.PlayerRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
@@ -19,22 +21,23 @@ public class PlayerService {
     @Autowired
     private PlayerRepository playerRepository;
     @Autowired
-    private OkHttpClient httpClient; // Inject the OkHttpClient bean
+    private OkHttpClient httpClient;
     @Autowired
-    private ObjectMapper objectMapper; //Auto wire the object mapper
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private PlayerPriceHistoryRepository playerPriceHistoryRepository;
 
     @Autowired
     private NBAPriceService nbaPriceService;
-    private static final String PYTHON_API_BASE_URL = "http://127.0.0.1:5000/api"; //Should be in a config
+    private static final String PYTHON_API_BASE_URL = "http://127.0.0.1:5000/api";
 
     public List<Player> getAllPlayers() {
-        //Check if players exist in DB
         List<Player> players = playerRepository.findAll();
         if (!players.isEmpty()) {
             return players;
         }
 
-        //Fetch players from python api if not in db
         try {
             Request request = new Request.Builder()
                     .url(PYTHON_API_BASE_URL + "/players")
@@ -45,11 +48,9 @@ public class PlayerService {
                     throw new IOException("Unexpected code " + response);
                 }
 
-                // Deserialize the JSON array to a List of Player objects
                 List<Player> fetchedPlayers = objectMapper.readValue(response.body().string(),
                         objectMapper.getTypeFactory().constructCollectionType(List.class, Player.class));
 
-                // Save all fetched players to the database
                 playerRepository.saveAll(fetchedPlayers);
 
                 return fetchedPlayers;
@@ -63,9 +64,9 @@ public class PlayerService {
         return playerRepository.findById(id);
     }
 
-    public PlayerStatsDto getPlayerStats(String playerName, boolean rolling) {
+    public PlayerStatsDto getPlayerStats(Integer playerId, boolean rolling) {
         try {
-            String url = PYTHON_API_BASE_URL + "/player/" + playerName + "/stats?rolling=" + rolling;
+            String url = PYTHON_API_BASE_URL + "/player/" + playerId + "/stats?rolling=" + rolling;
             Request request = new Request.Builder()
                     .url(url)
                     .build();
@@ -75,7 +76,6 @@ public class PlayerService {
                     throw new IOException("Unexpected code " + response);
                 }
 
-                // Deserialize the JSON response into PlayerStatsDto
                 return objectMapper.readValue(response.body().string(), PlayerStatsDto.class);
             }
         } catch (IOException e) {
@@ -92,13 +92,11 @@ public class PlayerService {
         return playerRepository.saveAll(players);
     }
 
-    @Transactional // Important for data consistency
+    @Transactional
     public void refreshPlayerData() {
         try {
-            // 1. Get the current list of players from the database.
             List<Player> currentPlayers = playerRepository.findAll();
 
-            // 2. Fetch the latest player data from the Python API.
             Request request = new Request.Builder()
                     .url(PYTHON_API_BASE_URL + "/players")
                     .build();
@@ -110,7 +108,6 @@ public class PlayerService {
                 List<Player> fetchedPlayers = objectMapper.readValue(response.body().string(),
                         objectMapper.getTypeFactory().constructCollectionType(List.class, Player.class));
 
-                // 3. Update or add players.
                 playerRepository.saveAll(fetchedPlayers);
 
             }
@@ -128,5 +125,12 @@ public class PlayerService {
 
     public List<Player> searchPlayers(String query) {
         return playerRepository.findByFullNameContainingIgnoreCase(query);
+    }
+
+    //PlayerService.java
+
+    @Transactional
+    public void savePlayerPriceHistory(PlayerPriceHistory playerPriceHistory) {
+        playerPriceHistoryRepository.save(playerPriceHistory);
     }
 }

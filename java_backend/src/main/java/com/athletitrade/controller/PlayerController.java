@@ -38,10 +38,10 @@ public class PlayerController {
     }
 
 
-    @GetMapping("/{playerName}/stats")
-    public ResponseEntity<PlayerStatsDto> getPlayerStats(@PathVariable String playerName,
-                                                         @RequestParam(defaultValue = "false") boolean rolling) { // Add rolling parameter
-        PlayerStatsDto stats = playerService.getPlayerStats(playerName, rolling);
+    @GetMapping("/{playerId}/stats")
+    public ResponseEntity<PlayerStatsDto> getPlayerStats(@PathVariable Integer playerId,
+                                                         @RequestParam(defaultValue = "false") boolean rolling) {
+        PlayerStatsDto stats = playerService.getPlayerStats(playerId, rolling);
         return ResponseEntity.ok(stats);
     }
 

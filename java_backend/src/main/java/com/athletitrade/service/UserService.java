@@ -16,19 +16,16 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     public User registerUser(User user) {
-        // Check if username already exists
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new IllegalArgumentException("Username already exists.");
         }
 
-        // Check if email already exists
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already exists.");
         }
 
-        // Hash the password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setBalance(1000.00); //Initial Balance
+        user.setBalance(1000.00);
         return userRepository.save(user);
     }
 
