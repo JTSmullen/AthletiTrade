@@ -1,0 +1,27 @@
+[
+  {
+    "player_id": "Precious Achiuwa",
+    "ipo_price": 5.1,
+    "float": 250
+  },
+  {
+    "player_id": "Steven Adams",
+    "ipo_price": 3.74,
+    "float": 250
+  },
+  {
+    "player_id": "Bam Adebayo",
+    "ipo_price": 10.09,
+    "float": 250
+  },
+  {
+    "player_id": "Ochai Agbaji",
+    "ipo_price": 8.14,
+    "float": 250
+  },
+  {
+    "player_id": "Santi Aldama",
+    "ipo_price": 9.07,
+    "float": 250
+  }
+]
