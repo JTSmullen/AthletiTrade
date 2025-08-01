@@ -1,0 +1,27 @@
+<div class="leaderboard-container">
+  <h1>Leaderboard</h1>
+  <p>Top 20 users by total portfolio value.</p>
+  
+  <div *ngIf="!isLoading; else loading">
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Username</th>
+          <th>Portfolio Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of leaderboardData; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ user.username }}</td>
+          <td>{{ user.total_value | currency:'USD':'symbol':'1.2-2' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<ng-template #loading>
+  <div class="loading-spinner"></div>
+</ng-template>

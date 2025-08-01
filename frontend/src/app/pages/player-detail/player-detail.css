@@ -1,0 +1,135 @@
+/* Using home component's CSS for loading spinner */
+@import '../home/home.css';
+
+.page-container {
+  display: flex;
+  gap: 2rem;
+  height: 100%;
+}
+
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Shared style for all sidebar panels */
+.sidebar-panel {
+  background-color: var(--background-secondary);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+h1 { font-size: 2.5rem; margin-bottom: 0.25rem; }
+.player-price { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; }
+
+.chart-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.chart-toggle button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  border-bottom: 2px solid transparent;
+}
+.chart-toggle button.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-blue);
+}
+
+.chart-container {
+  width: 100%;
+  flex-grow: 1;
+}
+
+:host ::ng-deep .ngx-charts text {
+  fill: var(--text-secondary) !important;
+}
+
+/* Stats Panels Styles */
+.stats-container {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+}
+.stat-panel {
+  flex-basis: 50%;
+}
+.stat-title {
+  font-size: 1.1rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.stat-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.stat-value {
+  font-weight: 700;
+}
+.text-green { color: var(--accent-green); }
+.text-red { color: var(--accent-red); }
+
+/* Order Book Styles */
+.order-book { display: flex; gap: 1rem; height: 100%; }
+.book-side { width: 50%; padding: 1rem; background-color: var(--background-tertiary); border-radius: 8px; }
+.book-header, .book-entry { display: flex; justify-content: space-between; padding: 0.25rem 0.5rem; font-size: 0.9rem; }
+.book-header { color: var(--text-secondary); border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem; }
+.price-green { color: var(--accent-green); }
+.price-red { color: var(--accent-red); }
+
+/* Order Form Styles */
+.order-type-toggle { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; }
+.order-type-toggle button { width: 50%; background: none; border: none; color: var(--text-secondary); padding: 0.75rem; font-size: 1rem; font-weight: 700; cursor: pointer; border-bottom: 2px solid transparent; }
+.order-type-toggle button.active { color: var(--text-primary); }
+.order-type-toggle button.active:first-child { border-bottom-color: var(--accent-green); }
+.order-type-toggle button.active:last-child { border-bottom-color: var(--accent-red); }
+.input-group { margin-bottom: 1rem; }
+.input-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); }
+.input-group input { width: 100%; padding: 0.75rem; background-color: var(--background-tertiary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 1rem; }
+.estimated-cost { display: flex; justify-content: space-between; padding: 1rem 0; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); margin: 1.5rem 0; font-weight: 700; }
+.trade-button { width: 100%; padding: 0.75rem; border-radius: 8px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; background-color: var(--accent-green); color: var(--background-primary); }
+form:has(.order-type-toggle button.active:last-child) .trade-button { background-color: var(--accent-red); }
+.trade-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.message { margin-top: 1rem; padding: 0.75rem; border-radius: 8px; text-align: center; }
+.message.error { background-color: rgba(255, 59, 48, 0.2); color: var(--accent-red); }
+.message.success { background-color: rgba(0, 200, 5, 0.2); color: var(--accent-green); }
+
+/* Open Orders Panel Styles */
+.sidebar-panel h3 { margin-top: 0; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
+.open-orders-list { list-style: none; padding: 0; margin: 0; }
+.open-orders-list li { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); }
+.open-orders-list li:last-child { border-bottom: none; }
+.order-details { display: flex; flex-direction: column; }
+.order-side { font-weight: 700; font-size: 1rem; text-transform: uppercase; }
+.order-side.buy { color: var(--accent-green); }
+.order-side.sell { color: var(--accent-red); }
+.order-info { font-size: 0.9rem; color: var(--text-secondary); }
+.cancel-button { background: none; border: 1px solid var(--text-tertiary); color: var(--text-secondary); padding: 0.25rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+.cancel-button:hover { background-color: var(--accent-red); border-color: var(--accent-red); color: var(--text-primary); }

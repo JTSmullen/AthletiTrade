@@ -1,0 +1,17 @@
+:host {
+  /* Make the app-root component itself a full-height flex container */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+main {
+  /* This tells the main content area to take up all available vertical space */
+  flex-grow: 1;
+  
+  /* Add a scrollbar only if the content overflows */
+  overflow-y: auto;
+  
+  /* Standard padding for the content area */
+  padding: 0 2rem;
+}

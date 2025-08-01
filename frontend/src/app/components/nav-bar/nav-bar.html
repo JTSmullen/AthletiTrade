@@ -1,0 +1,29 @@
+<nav class="navbar">
+  <div class="navbar-left">
+    <a class="logo" [routerLink]="['/home']">AthletiTrade</a>
+    <div class="search-container">
+      <input
+        #searchInput
+        type="search"
+        class="search-input"
+        placeholder="Search for a player..."
+        (keyup)="search($event)"
+        (focus)="search($event)"
+      />
+      <ul class="search-results" *ngIf="showResults && (searchResults$ | async) as results">
+        <li *ngFor="let result of results; else noResults"
+            (mousedown)="selectPlayer(result, searchInput)" >
+          {{ result }}
+        </li>
+        <ng-template #noResults>
+          <li class="no-results">No players found</li>
+        </ng-template>
+      </ul>
+    </div>
+  </div>
+  <div class="navbar-right">
+    <a class="nav-link" [routerLink]="['/home']" routerLinkActive="active">Investing</a>
+    <a class="nav-link" [routerLink]="['/leaderboard']" routerLinkActive="active">Leaderboard</a>
+    <button class="logout-button" (click)="onLogout()">Log Out</button>
+  </div>
+</nav>

@@ -1,0 +1,139 @@
+.page-container {
+  display: flex;
+  gap: 2rem;
+  /* Make the container take up all available vertical space */
+  height: calc(100vh - 120px); 
+}
+
+.main-content {
+  flex-grow: 1;
+  /* Arrange content vertically */
+  display: flex;
+  flex-direction: column;
+}
+
+.header-section {
+  flex-shrink: 0; /* Prevent this section from shrinking */
+}
+
+.chart-container {
+  width: 100%;
+  /* This is the key: it makes the chart take all available vertical space */
+  flex-grow: 1; 
+}
+
+.buying-power-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0; /* Prevent this section from shrinking */
+}
+
+.sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  background-color: var(--background-secondary);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  /* Arrange content vertically */
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  font-size: 3rem;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.portfolio-value {
+  font-size: 4rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.buying-power-label, .buying-power-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+/* Override ngx-charts text colors */
+:host ::ng-deep .ngx-charts text {
+  fill: var(--text-secondary) !important;
+}
+
+h2 {
+  margin-top: 0;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.holdings-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  /* Allow the list to grow and become scrollable if needed */
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.holdings-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin: 0 -1rem; /* Extend hover effect to the edges */
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.holdings-list li:hover {
+  background-color: var(--background-tertiary);
+}
+
+.holdings-list li:last-child {
+  border-bottom: none;
+}
+
+.holding-info, .holding-value {
+  display: flex;
+  flex-direction: column;
+}
+
+.holding-value {
+  text-align: right;
+}
+
+.holding-id {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.holding-quantity {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.holding-market-value {
+  font-weight: 500;
+}
+
+.loading-spinner {
+  border: 4px solid var(--border-color);
+  border-top: 4px solid var(--accent-green);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 4rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

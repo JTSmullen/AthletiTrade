@@ -1,0 +1,43 @@
+<div class="login-container">
+  <div class="login-box">
+    <h1>AthletiTrade</h1>
+    <div *ngIf="isLoginView">
+      <h2>Log In</h2>
+      <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+        <div class="input-group">
+          <label for="login-username">Username</label>
+          <input id="login-username" type="text" formControlName="username" required>
+        </div>
+        <div class="input-group">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" formControlName="password" required>
+        </div>
+        <button type="submit" [disabled]="loginForm.invalid">Log In</button>
+      </form>
+      <p>
+        Don't have an account? <a (click)="toggleView()">Register</a>
+      </p>
+    </div>
+
+    <div *ngIf="!isLoginView">
+      <h2>Register</h2>
+      <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+        <div class="input-group">
+          <label for="reg-username">Username</label>
+          <input id="reg-username" type="text" formControlName="username" required>
+        </div>
+        <div class="input-group">
+          <label for="reg-password">Password</label>
+          <input id="reg-password" type="password" formControlName="password" required>
+        </div>
+        <button type="submit" [disabled]="registerForm.invalid">Register</button>
+      </form>
+      <p>
+        Already have an account? <a (click)="toggleView()">Log In</a>
+      </p>
+    </div>
+
+    <div *ngIf="errorMessage" class="message error">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="message success">{{ successMessage }}</div>
+  </div>
+</div>

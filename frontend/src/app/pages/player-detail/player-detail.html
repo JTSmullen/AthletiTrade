@@ -1,0 +1,124 @@
+<div class="page-container" *ngIf="!isLoading; else loading">
+  <div class="main-content">
+    <h1>{{ id }}</h1>
+    <div class="player-price">
+      {{ currentPrice | currency:'USD':'symbol':'1.2-2' }}
+    </div>
+
+    <div class="chart-toggle">
+      <button [class.active]="!isOrderBookView" (click)="toggleChart(false)">Price Chart</button>
+      <button [class.active]="isOrderBookView" (click)="toggleChart(true)">Order Book</button>
+    </div>
+
+    <div class="chart-container">
+      <ngx-charts-line-chart *ngIf="!isOrderBookView"
+        [scheme]="colorScheme"
+        [results]="playerHistory"
+        [xAxis]="true"
+        [yAxis]="true"
+        [autoScale]="true"
+        [showGridLines]="false">
+      </ngx-charts-line-chart>
+
+      <div *ngIf="isOrderBookView" class="order-book">
+        <div class="book-side bids">
+          <h3>Bids (Buy)</h3>
+          <div class="book-header"><span>Price</span><span>Quantity</span></div>
+          <div *ngFor="let bid of orderBook?.bids | keyvalue: descendingOrder | slice:0:15" class="book-entry">
+            <span class="price-green">{{ bid.key | currency }}</span>
+            <span>{{ bid.value }}</span>
+          </div>
+        </div>
+        <div class="book-side asks">
+          <h3>Asks (Sell)</h3>
+          <div class="book-header"><span>Price</span><span>Quantity</span></div>
+          <div *ngFor="let ask of orderBook?.asks | keyvalue: ascendingOrder | slice:0:15" class="book-entry">
+            <span class="price-red">{{ ask.key | currency }}</span>
+            <span>{{ ask.value }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW STATS SECTION -->
+    <div class="stats-container">
+        <!-- Current Position Panel -->
+        <div class="stat-panel" *ngIf="currentUserHolding">
+            <h3 class="stat-title">Your Position</h3>
+            <div class="stat-row">
+                <span class="stat-label">Avg. Cost</span>
+                <span class="stat-value">{{ currentUserHolding.avg_cost | currency }}</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Market Value</span>
+                <span class="stat-value">{{ currentUserHolding.market_value | currency }}</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Gain/Loss</span>
+                <span class="stat-value" [ngClass]="currentUserHolding.gain_loss >= 0 ? 'text-green' : 'text-red'">
+                    {{ currentUserHolding.gain_loss | currency }} ({{ currentUserHolding.percent_change | number:'1.2-2' }}%)
+                </span>
+            </div>
+        </div>
+
+        <!-- Lifetime Performance Panel -->
+        <div class="stat-panel" *ngIf="lifetimeStats">
+            <h3 class="stat-title">Lifetime Performance</h3>
+            <div class="stat-row">
+                <span class="stat-label">Total Return</span>
+                <span class="stat-value" [ngClass]="lifetimeStats.total_return >= 0 ? 'text-green' : 'text-red'">
+                    {{ lifetimeStats.total_return | currency }} ({{ lifetimeStats.total_return_percent | number:'1.2-2' }}%)
+                </span>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <!-- TRADING PANEL -->
+    <div class="sidebar-panel">
+        <form [formGroup]="orderForm" (ngSubmit)="placeOrder()">
+            <div class="order-type-toggle">
+                <button type="button" [class.active]="orderForm.value.side === 'buy'" (click)="setOrderSide('buy')">Buy {{id}}</button>
+                <button type="button" [class.active]="orderForm.value.side === 'sell'" (click)="setOrderSide('sell')">Sell {{id}}</button>
+            </div>
+            
+            <div class="input-group">
+                <label>Shares</label>
+                <input type="number" formControlName="quantity" placeholder="0">
+            </div>
+            <div class="input-group">
+                <label>Limit Price</label>
+                <input type="number" formControlName="price" placeholder="$0.00">
+            </div>
+            
+            <div class="estimated-cost">
+                <span>Estimated Cost</span>
+                <span>{{ (orderForm.value.quantity * orderForm.value.price) || 0 | currency }}</span>
+            </div>
+
+            <button type="submit" class="trade-button" [disabled]="orderForm.invalid">Trade Now</button>
+
+            <div *ngIf="orderMessage" class="message" [ngClass]="orderMessageType">{{ orderMessage }}</div>
+        </form>
+    </div>
+
+    <!-- OPEN ORDERS PANEL -->
+    <div class="sidebar-panel" *ngIf="openOrders.length > 0">
+        <h3>Your Open Orders</h3>
+        <ul class="open-orders-list">
+            <li *ngFor="let order of openOrders">
+                <div class="order-details">
+                    <span class="order-side" [ngClass]="order.side">{{ order.side | uppercase }}</span>
+                    <span class="order-info">{{ order.quantity }} @ {{ order.price | currency }}</span>
+                </div>
+                <button class="cancel-button" (click)="onCancelOrder(order.order_id)">Cancel</button>
+            </li>
+        </ul>
+    </div>
+  </div>
+</div>
+
+<ng-template #loading>
+  <div class="loading-spinner"></div>
+</ng-template>
