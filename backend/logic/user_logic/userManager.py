@@ -202,3 +202,36 @@ class UserManager:
         print(f"  Cost of New Order: ${new_order_cost:.2f}")
 
         return new_order_cost <= effective_buying_power
+    
+    def check_available_shares(self, user, player_id: str, quantity_to_sell: int) -> bool:
+        """
+        Checks if a user has sufficient shares for a new sell order, considering
+        both their current holdings and the shares committed to existing open sell orders.
+
+        Returns True if they have enough shares, False otherwise.
+        """
+        db = self.get_db()
+        
+        # Get the total number of shares the user currently owns
+        total_shares = user.portfolio.holdings.get(player_id, {}).get('quantity', 0)
+        
+        # Find the total quantity of shares already committed to open sell orders
+        open_sell_orders = db.execute(
+            "SELECT SUM(quantity) as committed_shares FROM orders WHERE user_id = ? AND player_id = ? AND side = 'sell'",
+            (user.user_id, player_id)
+        ).fetchone()
+        
+        committed_shares = 0
+        if open_sell_orders and open_sell_orders['committed_shares']:
+            committed_shares = open_sell_orders['committed_shares']
+            
+        # Calculate the user's true, available shares
+        available_shares = total_shares - committed_shares
+        
+        print(f"Validation for {user.username} selling {player_id}:")
+        print(f"  Total Shares Owned: {total_shares}")
+        print(f"  Committed in Open Orders: {committed_shares}")
+        print(f"  Effective Available Shares: {available_shares}")
+        print(f"  Attempting to Sell: {quantity_to_sell}")
+
+        return quantity_to_sell <= available_shares

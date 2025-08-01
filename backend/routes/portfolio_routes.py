@@ -33,23 +33,22 @@ def place_user_order(current_user):
     user_manager = current_app.user_manager
     market = current_app.market
 
+    # --- THIS IS THE NEW, CORRECTED VALIDATION LOGIC ---
     if side == 'buy':
         cost = price * quantity
         if not user_manager.check_buying_power(current_user, cost):
-            return jsonify({"error": "Insufficient buying power."}), 403
+            return jsonify({"error": "Insufficient buying power when considering open orders."}), 403
     
     elif side == 'sell':
-        # --- THIS IS THE FIX ---
-        # Only perform the share check if the user is NOT the market maker.
+        # Exempt the market maker from this check
         if current_user.user_id != MARKET_MAKER_ID:
-            holdings = current_user.portfolio.holdings.get(player_id)
-            if not holdings or holdings['quantity'] < quantity:
-                return jsonify({"error": "Insufficient shares to sell"}), 403
-        # If the user IS the market maker, this entire block is skipped.
-        # --- END FIX ---
+            # Use our new method to check the true available shares
+            if not user_manager.check_available_shares(current_user, player_id, quantity):
+                return jsonify({"error": "Insufficient shares when considering open orders."}), 403
     
     else:
         return jsonify({"error": "Side must be 'buy' or 'sell'"}), 400
+    # --- END VALIDATION LOGIC ---
             
     order_id, trades = market.place_order(
         player_id, current_user.user_id, side, price, quantity, user_manager
@@ -118,34 +117,50 @@ def cancel_user_order(current_user, order_id: int):
 @token_required
 def get_user_player_trade_history(current_user, player_id):
     """
-    Calculates lifetime trading stats for a specific user and player.
+    Calculates lifetime trading stats for a specific user and player using
+    robust queries that account for both maker and taker trades.
     """
-    # --- 2. USE THE CORRECT FUNCTION TO GET THE DATABASE ---
     db = get_db()
-    
-    # The rest of the function remains the same.
-    # It now correctly queries for buy stats.
+    user_id = current_user.user_id
+
+    # --- THIS IS THE FIX ---
+
+    # Calculate total money spent on BUYING this player.
+    # This happens when the user is the taker of a 'buy' or the maker of a 'sell'.
     buy_stats = db.execute(
         """
-        SELECT SUM(price * quantity) as total_cost, SUM(quantity) as total_shares
+        SELECT SUM(price * quantity) as total_cost
         FROM trades
-        WHERE taker_user_id = ? AND player_id = ? AND taker_order_side = 'buy'
+        WHERE
+            player_id = ? AND
+            (
+                (taker_user_id = ? AND taker_order_side = 'buy') OR
+                (maker_user_id = ? AND taker_order_side = 'sell')
+            )
         """,
-        (current_user.user_id, player_id)
+        (player_id, user_id, user_id)
     ).fetchone()
 
-    # It also correctly queries for sell stats.
+    # Calculate total money received from SELLING this player.
+    # This happens when the user is the taker of a 'sell' or the maker of a 'buy'.
     sell_stats = db.execute(
         """
-        SELECT SUM(price * quantity) as total_proceeds, SUM(quantity) as total_shares
+        SELECT SUM(price * quantity) as total_proceeds
         FROM trades
-        WHERE taker_user_id = ? AND player_id = ? AND taker_order_side = 'sell'
+        WHERE
+            player_id = ? AND
+            (
+                (taker_user_id = ? AND taker_order_side = 'sell') OR
+                (maker_user_id = ? AND taker_order_side = 'buy')
+            )
         """,
-        (current_user.user_id, player_id)
+        (player_id, user_id, user_id)
     ).fetchone()
 
-    total_cost = buy_stats['total_cost'] or 0
-    total_proceeds = sell_stats['total_proceeds'] or 0
+    # --- END FIX ---
+
+    total_cost = buy_stats['total_cost'] if buy_stats and buy_stats['total_cost'] else 0
+    total_proceeds = sell_stats['total_proceeds'] if sell_stats and sell_stats['total_proceeds'] else 0
     
     return jsonify({
         "total_cost": total_cost,

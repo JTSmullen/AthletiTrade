@@ -81,11 +81,17 @@ class OrderBook:
         db.commit()
         return trades, new_order_id
 
+# In your OrderBook class in logic/market_logic/orderbook/orderBook.py
+
     def _match_engine(self, incoming_order: Order, db: sqlite3.Connection) -> list[dict]:
-        # This method is now correct and does not need changes
+        """
+        The core matching engine. Compares an incoming order against the in-memory heaps
+        and executes trades. All database and in-memory modifications happen here.
+        """
         trades = []
         trade_timestamp = time.time()
         
+        # --- LOGIC FOR A BUY ORDER ---
         if incoming_order.side == 'buy':
             while self.asks and incoming_order.quantity > 0 and incoming_order.price >= self.asks[0][0]:
                 best_ask_price, _, existing_order_id = self.asks[0]
@@ -112,45 +118,31 @@ class OrderBook:
                 else:
                     db.execute("UPDATE orders SET quantity = ? WHERE order_id = ?", (existing_order.quantity, existing_order.order_id))
 
-        # --- LOGIC FOR A SELL ORDER ---
+        # --- LOGIC FOR A SELL ORDER (CORRECTED) ---
         elif incoming_order.side == 'sell':
-            # While there are bids, the new order still has quantity, and its price is low enough to match
             while self.bids and incoming_order.quantity > 0 and incoming_order.price <= -self.bids[0][0]:
                 best_bid_price_neg, _, existing_order_id = self.bids[0]
                 existing_order = self.orders.get(existing_order_id)
-                
+
                 if not existing_order or existing_order.quantity == 0:
                     heapq.heappop(self.bids)
                     continue
                 
                 trade_quantity = min(incoming_order.quantity, existing_order.quantity)
-                trade_price = -best_bid_price_neg
+                trade_price = -best_bid_price_neg # The actual price is positive
 
-                trade = {
-                    "price": trade_price, "quantity": trade_quantity,
-                    "maker_order_id": existing_order.order_id, "maker_user_id": existing_order.user_id,
-                    "taker_user_id": incoming_order.user_id, "taker_order_side": "sell"
-                }
+                trade = { "price": trade_price, "quantity": trade_quantity, "maker_order_id": existing_order.order_id, "maker_user_id": existing_order.user_id, "taker_user_id": incoming_order.user_id, "taker_order_side": "sell" }
                 trades.append(trade)
                 
+                # --- THIS IS THE FIX ---
+                # The INSERT statement now correctly uses `trade_price` instead of the non-existent `best_ask_price`.
                 db.execute(
-                """
-                    INSERT INTO trades (
-                        player_id, price, quantity, timestamp, 
-                        taker_order_id, maker_order_id, 
-                        taker_user_id, maker_user_id, taker_order_side
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        self.player_id, best_ask_price, trade_quantity, trade_timestamp,
-                        0, existing_order.order_id, # Taker order ID is 0 as it's not on the book
-                        incoming_order.user_id, existing_order.user_id, "buy"
-                    )
+                    "INSERT INTO trades (player_id, price, quantity, timestamp, taker_order_id, maker_order_id, taker_user_id, maker_user_id, taker_order_side) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (self.player_id, trade_price, trade_quantity, trade_timestamp, 0, existing_order.order_id, incoming_order.user_id, existing_order.user_id, "sell")
                 )
+                # --- END FIX ---
                 
                 incoming_order.quantity -= trade_quantity
-                # --- THIS IS THE FIX ---
-                # Update the in-memory quantity of the existing order
                 existing_order.quantity -= trade_quantity
 
                 if existing_order.quantity == 0:
